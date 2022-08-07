@@ -1,0 +1,10 @@
+{
+	"extends": "@package/tsconfig/wrangler.json",
+	"include": [
+		"**/*.ts",
+		"**/*.tsx"
+	],
+	"compilerOptions": {
+		"baseUrl": "."
+	}
+}

@@ -12,6 +12,15 @@
     "moduleResolution": "node",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "plugins": [
+      {
+        "name": "typescript-styled-plugin",
+        "tags": [
+          "styled",
+          "css"
+        ]
+      }
+    ],
     "preserveWatchOutput": true,
     "skipLibCheck": true,
     "strict": true

@@ -1,0 +1,17 @@
+{
+	"name": "@app/server",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler publish",
+		"start": "wrangler dev",
+		"wrangler": "wrangler"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^3.14.1",
+		"@package/eslint-config-custom": "workspace:*",
+		"@package/tsconfig": "workspace:*",
+		"typescript": "^4.7.4",
+		"wrangler": "^2.0.24"
+	}
+}

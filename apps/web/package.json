@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@app/web",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -9,19 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "12.2.3",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
-    "ui": "workspace:*"
+    "@types/node": "^18.6.4",
+    "@types/react": "18.0.15",
+    "next": "12.2.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
-    "eslint-config-custom": "workspace:*",
-    "eslint": "7.32.0",
+    "@package/eslint-config-custom": "workspace:*",
+    "@package/tsconfig": "workspace:*",
+    "eslint": "8.21.0",
     "next-transpile-modules": "9.0.0",
-    "tsconfig": "workspace:*",
-    "@types/node": "^17.0.12",
-    "@types/react": "17.0.47",
     "typescript": "^4.5.3"
   }
 }
