@@ -1,3 +1,5 @@
+import { match } from "path-to-regexp";
+
 type PathParamRecord<
 	TParamName extends string,
 	TParamValue extends string | string[] = string
@@ -17,7 +19,8 @@ export type PathParams<T extends string> =	T extends string
 		: {}
 	: `Error: Could not resolve path: ${T}`
 
-type RouterPathHandler<T extends PathParamRecord<string, any>> = (params: T) => Promise<Response>;
+type RouterPathHandler<T extends PathParamRecord<string, any>> =
+	(params: AsObject<T>) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
 	TPathName extends string,
@@ -70,4 +73,37 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 
 		return Router.merge(this, new Router({ paths: newPath }));
 	}
+
+	public async match(request: Request): Promise<Response> {
+		const url = new URL(request.url);
+
+		const patterns = Object.keys(this.paths);
+
+		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
+
+		if (!matchedPattern) {
+			return new Response("OK", { status: 200 });
+		}
+
+		const matched = match(matchedPattern)(url.pathname);
+
+		if (!matched) {
+			return new Response("OK", { status: 200 });
+		}
+
+		const handler = this.paths[matchedPattern];
+		const params = matched.params;
+
+		if (!handler) {
+			return new Response("OK", { status: 200 });
+		}
+
+		const response = await handler(params);
+
+		return response ?? new Response("OK", { status: 200 });
+	}
 }
+
+export const router = (): Router<{}> => {
+	return new Router();
+};

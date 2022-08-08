@@ -9,5 +9,8 @@
 		"@package/eslint-config-custom": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*"
+	},
+	"dependencies": {
+		"path-to-regexp": "^6.2.1"
 	}
 }
