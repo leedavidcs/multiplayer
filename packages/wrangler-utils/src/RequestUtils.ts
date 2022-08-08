@@ -4,9 +4,7 @@ export class RequestUtils {
 	public static getRequestIp(request: Request): string {
 		const clientIp = request.headers.get("CF-Connecting-IP");
 
-		if (!clientIp) {
-			throw new Error("Could not get connecting ip");
-		}
+		if (!clientIp) throw new Error("Could not get connecting ip");
 
 		return clientIp;
 	}
