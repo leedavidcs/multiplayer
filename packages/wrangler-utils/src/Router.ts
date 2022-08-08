@@ -5,19 +5,19 @@ type PathParamRecord<
 	TParamValue extends string | string[] = string
 > = { [key in `${TParamName}`]: TParamValue };
 
-export type PathParams<T extends string> =	T extends string
+export type PathParams<T extends string> = T extends string
 	? T extends `/:${infer IFullParam}`
 		? IFullParam extends `${infer IParamName}/${infer IRestParam}`
 			? Spread<[PathParamRecord<IParamName>, PathParams<`/${IRestParam}`>]>
 			: IFullParam extends `${infer IParamName}${'+' | '*'}`
 				? PathParamRecord<IParamName, string[]>
 				: PathParamRecord<IFullParam>
-	: T extends `/${infer IFullPath}`
-		? IFullPath extends `${string}/${infer IRestParam}`
-			? PathParams<`/${IRestParam}`>
+		: T extends `/${infer IFullPath}`
+			? IFullPath extends `${string}/${infer IRestParam}`
+				? PathParams<`/${IRestParam}`>
+				: {}
 			: {}
-		: {}
-	: `Error: Could not resolve path: ${T}`
+	: `Error: Could not resolve path: ${T}`;
 
 type RouterPathHandler<T extends PathParamRecord<string, any>> =
 	(params: Id<T>, request: Request) => Promise<Response> | Response | void;
