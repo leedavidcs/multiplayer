@@ -1,4 +1,4 @@
-import { RequestUtils } from "@package/wrangler-utils";
+import { RequestUtils, router } from "@package/wrangler-utils";
 
 export class RoomDurableObject implements DurableObject {
 	private env: Env;

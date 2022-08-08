@@ -20,7 +20,7 @@ export type PathParams<T extends string> =	T extends string
 	: `Error: Could not resolve path: ${T}`
 
 type RouterPathHandler<T extends PathParamRecord<string, any>> =
-	(params: AsObject<T>) => Promise<Response> | Response | void;
+	(params: AsObject<T>, request: Request) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
 	TPathName extends string,
@@ -98,7 +98,7 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 			return new Response("OK", { status: 200 });
 		}
 
-		const response = await handler(params);
+		const response = await handler(params, request);
 
 		return response ?? new Response("OK", { status: 200 });
 	}
