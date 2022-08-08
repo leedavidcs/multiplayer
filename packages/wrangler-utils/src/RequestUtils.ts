@@ -1,6 +1,16 @@
 import { WebSocketUtils } from "./WebsocketUtils";
 
 export class RequestUtils {
+	public static getRequestIp(request: Request): string {
+		const clientIp = request.headers.get("CF-Connecting-IP");
+
+		if (!clientIp) {
+			throw new Error("Could not get connecting ip");
+		}
+
+		return clientIp;
+	}
+
 	public static async handleErrors(
 		request: Request,
 		event: (request: Request) => Promise<Response>
