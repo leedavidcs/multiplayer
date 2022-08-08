@@ -23,7 +23,7 @@ export class RoomDurableObject implements DurableObject {
 
 	async fetch(request: Request): Promise<Response> {
 		return await RequestUtils.handleErrors(request, async () => {
-			return this.router.match(request);
+			return await this.router.match(request);
 		});
 	}
 }
