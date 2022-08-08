@@ -5,6 +5,10 @@
 		"**/*.tsx"
 	],
 	"compilerOptions": {
-		"baseUrl": "."
+		"baseUrl": ".",
+		"types": ["types.d.ts"],
+		"paths": {
+			"@package/wrangler-utils": ["../../packages/wrangler-utils/src"]
+		}
 	}
 }
