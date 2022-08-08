@@ -76,31 +76,21 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 
 	public async match(request: Request): Promise<Response> {
 		const url = new URL(request.url);
-
 		const patterns = Object.keys(this.paths);
-
 		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
 
-		if (!matchedPattern) {
-			return new Response("OK", { status: 200 });
-		}
+		if (!matchedPattern) return new Response("OK", { status: 200 });
 
 		const matched = match(matchedPattern)(url.pathname);
 
-		if (!matched) {
-			return new Response("OK", { status: 200 });
-		}
+		if (!matched) return new Response("OK", { status: 200 });
 
 		const handler = this.paths[matchedPattern];
 		const params = matched.params;
 
-		if (!handler) {
-			return new Response("OK", { status: 200 });
-		}
+		if (!handler) return new Response("OK", { status: 200 });
 
-		const response = await handler(params, request);
-
-		return response ?? new Response("OK", { status: 200 });
+		return await handler(params, request) ?? new Response("OK", { status: 200 });
 	}
 }
 
