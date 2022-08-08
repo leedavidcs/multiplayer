@@ -9,7 +9,7 @@ export type PathParams<T extends string> =	T extends string
 	? T extends `/:${infer IFullParam}`
 		? IFullParam extends `${infer IParamName}/${infer IRestParam}`
 			? Spread<[PathParamRecord<IParamName>, PathParams<`/${IRestParam}`>]>
-			: IFullParam extends `${infer IParamName}+`
+			: IFullParam extends `${infer IParamName}{'+' | '*'}`
 				? PathParamRecord<IParamName, string[]>
 				: PathParamRecord<IFullParam>
 	: T extends `/${infer IFullPath}`
@@ -79,16 +79,16 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 		const patterns = Object.keys(this.paths);
 		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
 
-		if (!matchedPattern) return new Response("OK", { status: 200 });
+		if (!matchedPattern) return new Response("Not found", { status: 404 });
 
 		const matched = match(matchedPattern)(url.pathname);
 
-		if (!matched) return new Response("OK", { status: 200 });
+		if (!matched) return new Response("Not found", { status: 404 });
 
 		const handler = this.paths[matchedPattern];
 		const params = matched.params;
 
-		if (!handler) return new Response("OK", { status: 200 });
+		if (!handler) return new Response("Not found", { status: 404 });
 
 		return await handler(params, request) ?? new Response("OK", { status: 200 });
 	}
