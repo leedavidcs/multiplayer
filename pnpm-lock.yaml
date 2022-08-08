@@ -107,6 +107,9 @@ importers:
       '@package/eslint-config-custom': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
+      path-to-regexp: ^6.2.1
+    dependencies:
+      path-to-regexp: 6.2.1
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/tsconfig': link:../tsconfig
@@ -2803,7 +2806,6 @@ packages:
 
   /path-to-regexp/6.2.1:
     resolution: {integrity: sha512-JLyh7xT1kizaEvcaXOQwOc2/Yhw6KZOvPf1S8401UyLk86CU79LN3vl7ztXGm/pZ+YjoyAJ4rxmHwbkBXJX+yw==}
-    dev: true
 
   /path-type/4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
