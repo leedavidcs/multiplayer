@@ -5,7 +5,7 @@ export class RoomDurableObject implements DurableObject {
 	private storage: DurableObjectStorage;
 
 	private router = router()
-		.path("/websocket", ({}, request) => {
+		.path("/websocket", (__, request) => {
 			if (!RequestUtils.isWebSocketRequest(request)) {
 				return new Response("Expected websocket", { status: 400 });
 			}

@@ -1,3 +1,4 @@
+/// <reference types="@package/typings/general" />
 /// <reference types="@package/typings/wrangler" />
 
 declare interface Env {

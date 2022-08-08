@@ -17,10 +17,9 @@ type SpreadTwo<L, R> = Id<
 	& SpreadProperties<L, R, OptionalPropertyNames<R> & keyof L>
 >;
 
-declare type Spread<A extends readonly [...any]> = A extends [infer L, ...infer R] ?
-	SpreadTwo<L, Spread<R>> : unknown;
-
-declare type AsObject<T extends Record<string, any>> = Spread<[{}, T]>;
+declare type Spread<A extends readonly [...any]> = A extends [infer L, ...infer R]
+	? SpreadTwo<L, Spread<R>>
+	: unknown;
 
 declare type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends Array<infer U>

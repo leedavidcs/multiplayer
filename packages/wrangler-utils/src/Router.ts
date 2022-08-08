@@ -9,7 +9,7 @@ export type PathParams<T extends string> =	T extends string
 	? T extends `/:${infer IFullParam}`
 		? IFullParam extends `${infer IParamName}/${infer IRestParam}`
 			? Spread<[PathParamRecord<IParamName>, PathParams<`/${IRestParam}`>]>
-			: IFullParam extends `${infer IParamName}{'+' | '*'}`
+			: IFullParam extends `${infer IParamName}+`
 				? PathParamRecord<IParamName, string[]>
 				: PathParamRecord<IFullParam>
 	: T extends `/${infer IFullPath}`
@@ -20,7 +20,7 @@ export type PathParams<T extends string> =	T extends string
 	: `Error: Could not resolve path: ${T}`
 
 type RouterPathHandler<T extends PathParamRecord<string, any>> =
-	(params: AsObject<T>, request: Request) => Promise<Response> | Response | void;
+	(params: Id<T>, request: Request) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
 	TPathName extends string,
