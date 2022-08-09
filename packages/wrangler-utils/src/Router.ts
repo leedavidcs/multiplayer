@@ -19,19 +19,20 @@ export type PathParams<T extends string> = T extends string
 			: {}
 	: `Error: Could not resolve path: ${T}`;
 
-type RouterPathHandler<T extends PathParamRecord<string, any>> =
-	(params: Id<T>, request: Request) => Promise<Response> | Response | void;
+type RouterPathHandler<TEnv, T extends PathParamRecord<string, any>> =
+	(params: Id<T>, request: Request, env: TEnv) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
+	TEnv,
 	TPathName extends string,
 	TPathParams extends PathParams<TPathName>
-> = Record<TPathName, RouterPathHandler<TPathParams>>;
+> = Record<TPathName, RouterPathHandler<TEnv, TPathParams>>;
 
-export interface RouterOptions<TPaths extends RouterPathRecord<string, any>> {
+export interface RouterOptions<TEnv, TPaths extends RouterPathRecord<TEnv, string, any>> {
 	paths?: TPaths;
 }
 
-export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
+export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {}> {
 	/**
 	 * !HACK
 	 * @description We're relying on a non-guaranteed property of objects, with
@@ -42,17 +43,18 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 	 */
 	public paths: TPaths = {} as TPaths;
 
-	constructor(options: RouterOptions<TPaths> = {}) {
+	constructor(options: RouterOptions<TEnv, TPaths> = {}) {
 		this.paths = options.paths ?? {} as TPaths;
 	}
 
 	public static merge<
-		TPaths1 extends RouterPathRecord<string, any>,
-		TPaths2 extends RouterPathRecord<string, any>
+		TEnvStatic,
+		TPathsStatic1 extends RouterPathRecord<TEnvStatic, string, any>,
+		TPathsStatic2 extends RouterPathRecord<TEnvStatic, string, any>
 	>(
-		router1: Router<TPaths1>,
-		router2: Router<TPaths2>
-	): Router<Spread<[TPaths1, TPaths2]>> {
+		router1: Router<TEnvStatic, TPathsStatic1>,
+		router2: Router<TEnvStatic, TPathsStatic2>
+	): Router<TEnvStatic, Spread<[TPathsStatic1, TPathsStatic2]>> {
 		const paths1 = router1.paths;
 		const paths2 = router2.paths;
 
@@ -67,14 +69,14 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 
 	public path<TPath extends string>(
 		pattern: TPath,
-		handler: RouterPathHandler<PathParams<TPath>>
-	): Router<Spread<[TPaths, RouterPathRecord<TPath, PathParams<TPath>>]>> {
-		const newPath = { [pattern]: handler } as RouterPathRecord<TPath, PathParams<TPath>>;
+		handler: RouterPathHandler<TEnv, PathParams<TPath>>
+	): Router<TEnv, Spread<[TPaths, RouterPathRecord<TEnv, TPath, PathParams<TPath>>]>> {
+		const newPath = { [pattern]: handler } as RouterPathRecord<TEnv, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
 	}
 
-	public async match(request: Request): Promise<Response> {
+	public async match(request: Request, env: TEnv): Promise<Response> {
 		const url = new URL(request.url);
 		const patterns = Object.keys(this.paths);
 		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
@@ -90,10 +92,10 @@ export class Router<TPaths extends RouterPathRecord<string, any> = {}> {
 
 		if (!handler) return new Response("Not found", { status: 404 });
 
-		return await handler(params, request) ?? new Response("OK", { status: 200 });
+		return await handler(params, request, env) ?? new Response("OK", { status: 200 });
 	}
 }
 
-export const router = (): Router<{}> => {
-	return new Router();
+export const createRouter = <TEnv = {}>(): Router<TEnv, {}> => {
+	return new Router<TEnv>();
 };

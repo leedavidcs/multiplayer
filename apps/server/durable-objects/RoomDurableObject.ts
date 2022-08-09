@@ -1,10 +1,10 @@
-import { RequestUtils, router, WebSocketUtils } from "@package/wrangler-utils";
+import { createRouter, RequestUtils, WebSocketUtils } from "@package/wrangler-utils";
 
 export class RoomDurableObject implements DurableObject {
 	private env: Env;
 	private storage: DurableObjectStorage;
 
-	private router = router()
+	private router = createRouter<Env>()
 		.path("/websocket", (__, request) => {
 			if (!RequestUtils.isWebSocketRequest(request)) {
 				return new Response("Expected websocket", { status: 400 });
@@ -23,7 +23,7 @@ export class RoomDurableObject implements DurableObject {
 
 	async fetch(request: Request): Promise<Response> {
 		return await RequestUtils.handleErrors(request, async () => {
-			return await this.router.match(request);
+			return await this.router.match(request, this.env);
 		});
 	}
 }
