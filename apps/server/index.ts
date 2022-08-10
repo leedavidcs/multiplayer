@@ -14,7 +14,10 @@ const router = createRouter<Env>()
 			headers: { "access-control-allow-origin": "*" }
 		});
 	})
-	.path("/api/room/:name", async ({ name }, request, env) => {
+	.path("/api/room/:rest*", async ({ rest }, request, env) => {
+		const [name, ...restPath] = rest;
+		const forwardUrl = `/${restPath.join("/")}`;
+
 		const roomId = DurableObjectUtils.isValidId(name)
 			? env.rooms.idFromString(name)
 			: DurableObjectUtils.isValidName(name)
@@ -25,13 +28,7 @@ const router = createRouter<Env>()
 
 		const room = env.rooms.get(roomId);
 
-		const newUrl = `/${new URL(request.url).pathname
-			.split("/")
-			.slice(2)
-			.join("/")
-			.toString()}`;
-
-		return room.fetch(newUrl, request);
+		return room.fetch(forwardUrl, request);
 	});
 
 
