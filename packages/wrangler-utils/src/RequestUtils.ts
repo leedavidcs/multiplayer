@@ -1,4 +1,4 @@
-import { WebSocketUtils } from "./WebsocketUtils";
+import { WebSocketUtils } from "./WebSocketUtils";
 
 export class RequestUtils {
 	public static getRequestIp(request: Request): string {
