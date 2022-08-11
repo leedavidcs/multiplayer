@@ -52,6 +52,12 @@ type OutputEventMessage<
 		: never;
 }[keyof TOutput];
 
+interface WebSocketSession {
+	quit: boolean;
+	id: string;
+	webSocket: WebSocket;
+}
+
 export interface MultiplayerOptions<
 	TEnv,
 	TEvents extends EventRecord<TEnv, string, any>
@@ -65,9 +71,45 @@ export class Multiplayer<
 	TEvents extends EventRecord<TEnv, string, any> = {}
 > {
 	public events: TEvents;
+	private sessions: WebSocketSession[] = [];
 
 	constructor(options: MultiplayerOptions<TEnv, TEvents> = {}) {
 		this.events = options.events ?? {} as TEvents;
+	}
+
+	public broadcast(message: OutputEventMessage<TOutput>): void {
+		const { stayers, quitters } = this.sessions.reduce(
+			(state, session) => {
+				return session.quit
+					? {
+						stayers: state.stayers,
+						quitters: [...state.quitters, session]
+					}
+					: {
+						stayers: [...state.stayers, session],
+						quitters: state.quitters
+					};
+			},
+			{
+				stayers: [] as WebSocketSession[],
+				quitters: [] as WebSocketSession[]
+			}
+		);
+
+		this.sessions = stayers;
+
+		stayers.forEach((stayer) => {
+			Multiplayer.sendMessage(stayer.webSocket, message);
+		});
+
+		quitters.forEach((quitter) => {
+			/**
+			 * TODO
+			 * @description Broadcast the sessions that closed
+			 * @author David Lee
+			 * @date August 11, 2022
+			 */
+		});
 	}
 
 	public event<
@@ -128,6 +170,20 @@ export class Multiplayer<
 	}
 
 	public register(webSocket: WebSocket, env: TEnv): void {
+		const session: WebSocketSession = {
+			quit: false,
+			/**
+			 * TODO
+			 * @description Figure out how we should handle ids per session
+			 * @author David Lee
+			 * @date August 11, 2022
+			 */
+			id: "",
+			webSocket
+		};
+
+		webSocket.accept();
+
 		webSocket.addEventListener("message", (message) => {
 			const config = Multiplayer.parseMessage(message);
 
@@ -147,18 +203,31 @@ export class Multiplayer<
 			const input = eventConfig.input.parse(config.data);
 
 			eventConfig.resolver(input, {
-				/**
-				 * TODO
-				 * @description Write a real broadcast method here
-				 * @author David Lee
-				 * @date August 10, 2022
-				 */
-				broadcast: () => {
-					return;
-				},
+				broadcast: this.broadcast,
 				env
 			});
 		});
+
+		const closeHandler = () => {
+			session.quit = true;
+
+			this.sessions = this.sessions.filter((member) => member !== session);
+
+			/**
+			 * TODO
+			 * @description Broadcast that this session has closed
+			 * @author David Lee
+			 * @date August 11, 2022
+			 */
+		};
+
+		this.sessions.push(session);
+	}
+
+	private static sendMessage<
+		TMessage extends EventMessage<string, any> = EventMessage<string, any>
+	>(webSocket: WebSocket, data: TMessage): void {
+		webSocket.send(JSON.stringify(data));
 	}
 }
 
