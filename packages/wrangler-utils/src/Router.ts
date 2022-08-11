@@ -41,10 +41,29 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 	 * @author David Lee
 	 * @date August 8, 2022
 	 */
-	public paths: TPaths = {} as TPaths;
+	public paths: TPaths;
 
 	constructor(options: RouterOptions<TEnv, TPaths> = {}) {
 		this.paths = options.paths ?? {} as TPaths;
+	}
+
+	public async match(request: Request, env: TEnv): Promise<Response> {
+		const url = new URL(request.url);
+		const patterns = Object.keys(this.paths);
+		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
+
+		if (!matchedPattern) return new Response("Not found", { status: 404 });
+
+		const matched = match(matchedPattern)(url.pathname);
+
+		if (!matched) return new Response("Not found", { status: 404 });
+
+		const handler = this.paths[matchedPattern];
+		const params = matched.params;
+
+		if (!handler) return new Response("Not found", { status: 404 });
+
+		return await handler(params, request, env) ?? new Response("OK", { status: 200 });
 	}
 
 	public static merge<
@@ -74,25 +93,6 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 		const newPath = { [pattern]: handler } as RouterPathRecord<TEnv, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
-	}
-
-	public async match(request: Request, env: TEnv): Promise<Response> {
-		const url = new URL(request.url);
-		const patterns = Object.keys(this.paths);
-		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
-
-		if (!matchedPattern) return new Response("Not found", { status: 404 });
-
-		const matched = match(matchedPattern)(url.pathname);
-
-		if (!matched) return new Response("Not found", { status: 404 });
-
-		const handler = this.paths[matchedPattern];
-		const params = matched.params;
-
-		if (!handler) return new Response("Not found", { status: 404 });
-
-		return await handler(params, request, env) ?? new Response("OK", { status: 200 });
 	}
 }
 
