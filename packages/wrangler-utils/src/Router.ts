@@ -88,7 +88,7 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 
 	public path<TPath extends string>(
 		pattern: TPath,
-		handler: RouterPathHandler<TEnv, PathParams<TPath>>
+		handler: RouterPathHandler<TEnv, Id<PathParams<TPath>>>
 	): Router<TEnv, Spread<[TPaths, RouterPathRecord<TEnv, TPath, PathParams<TPath>>]>> {
 		const newPath = { [pattern]: handler } as RouterPathRecord<TEnv, TPath, PathParams<TPath>>;
 
