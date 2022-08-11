@@ -1,5 +1,5 @@
 {
-	"extends": "@package/tsconfig/base.json",
+	"extends": "@package/tsconfig/wrangler.json",
 	"include": [
 		"types.d.ts",
 		"**/*.ts"
