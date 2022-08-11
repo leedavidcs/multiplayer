@@ -26,7 +26,7 @@ type RouterPathRecord<
 	TEnv,
 	TPathName extends string,
 	TPathParams extends PathParams<TPathName>
-> = Record<TPathName, RouterPathHandler<TEnv, TPathParams>>;
+> = Record<TPathName, RouterPathHandler<TEnv, Id<TPathParams>>>;
 
 export interface RouterOptions<TEnv, TPaths extends RouterPathRecord<TEnv, string, any>> {
 	paths?: TPaths;
