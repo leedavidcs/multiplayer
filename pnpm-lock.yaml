@@ -76,12 +76,9 @@ importers:
 
   packages/multiplayer:
     specifiers:
-      '@cloudflare/workers-types': ^3.14.1
       '@package/eslint-config-custom': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
-    dependencies:
-      '@cloudflare/workers-types': 3.14.1
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/tsconfig': link:../tsconfig
