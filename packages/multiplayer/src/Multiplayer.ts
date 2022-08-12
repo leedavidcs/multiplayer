@@ -52,9 +52,15 @@ type OutputEventMessage<
 		: never;
 }[keyof TOutput];
 
+interface DefaultOutputRecord {
+	$INTERNAL_QUIT: { id: string; };
+}
+
+type DefaultOutputMessage = OutputEventMessage<DefaultOutputRecord>;
+
 interface WebSocketSession {
-	quit: boolean;
 	id: string;
+	quit: boolean;
 	webSocket: WebSocket;
 }
 
@@ -77,7 +83,9 @@ export class Multiplayer<
 		this.events = options.events ?? {} as TEvents;
 	}
 
-	public broadcast(message: OutputEventMessage<TOutput>): void {
+	public broadcast(
+		message: OutputEventMessage<TOutput> | DefaultOutputMessage
+	): void {
 		const { stayers, quitters } = this.sessions.reduce(
 			(state, session) => {
 				return session.quit
@@ -103,12 +111,10 @@ export class Multiplayer<
 		});
 
 		quitters.forEach((quitter) => {
-			/**
-			 * TODO
-			 * @description Broadcast the sessions that closed
-			 * @author David Lee
-			 * @date August 11, 2022
-			 */
+			this.broadcast({
+				type: "$INTERNAL_QUIT",
+				data: { id: quitter.id }
+			});
 		});
 	}
 
@@ -119,6 +125,10 @@ export class Multiplayer<
 		event: TEvent,
 		config: EventConfig<TEnv, TData>
 	): Multiplayer<TEnv, TOutput, Spread<[TEvents, EventRecord<TEnv, TEvent, TData>]>> {
+		if (event.startsWith("$")) {
+			throw new Error("Event name must not start with \"$\".");
+		}
+
 		const newEvent = { [event]: config } as EventRecord<TEnv, TEvent, TData>;
 
 		return Multiplayer.merge(this, new Multiplayer({ events: newEvent }));
@@ -170,19 +180,15 @@ export class Multiplayer<
 	}
 
 	public register(webSocket: WebSocket, env: TEnv): void {
+		webSocket.accept();
+
 		const session: WebSocketSession = {
+			id: crypto.randomUUID(),
 			quit: false,
-			/**
-			 * TODO
-			 * @description Figure out how we should handle ids per session
-			 * @author David Lee
-			 * @date August 11, 2022
-			 */
-			id: "",
 			webSocket
 		};
 
-		webSocket.accept();
+		this.sessions.push(session);
 
 		webSocket.addEventListener("message", (message) => {
 			const config = Multiplayer.parseMessage(message);
@@ -213,15 +219,14 @@ export class Multiplayer<
 
 			this.sessions = this.sessions.filter((member) => member !== session);
 
-			/**
-			 * TODO
-			 * @description Broadcast that this session has closed
-			 * @author David Lee
-			 * @date August 11, 2022
-			 */
+			this.broadcast({
+				type: "$INTERNAL_QUIT",
+				data: { id: session.id }
+			});
 		};
 
-		this.sessions.push(session);
+		webSocket.addEventListener("close", closeHandler);
+		webSocket.addEventListener("error", closeHandler);
 	}
 
 	private static sendMessage<
