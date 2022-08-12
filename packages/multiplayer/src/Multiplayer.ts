@@ -53,7 +53,13 @@ type OutputEventMessage<
 }[keyof TOutput];
 
 interface DefaultOutputRecord {
-	$INTERNAL_QUIT: { id: string; };
+	$INTERNAL_ERROR: {
+		message: string;
+		stack: string | null;
+	};
+	$INTERNAL_QUIT: {
+		id: string;
+	};
 }
 
 type DefaultOutputMessage = OutputEventMessage<DefaultOutputRecord>;
@@ -190,7 +196,7 @@ export class Multiplayer<
 
 		this.sessions.push(session);
 
-		webSocket.addEventListener("message", (message) => {
+		webSocket.addEventListener("message", async (message) => {
 			const config = Multiplayer.parseMessage(message);
 
 			/**
@@ -208,10 +214,34 @@ export class Multiplayer<
 
 			const input = eventConfig.input.parse(config.data);
 
-			eventConfig.resolver(input, {
-				broadcast: this.broadcast,
-				env
-			});
+			try {
+				await Promise.resolve(
+					eventConfig.resolver(input, {
+						broadcast: this.broadcast,
+						env
+					})
+				);
+			} catch (error) {
+				if (!(error instanceof Error)) {
+					Multiplayer.sendMessage(webSocket, {
+						type: "$ERROR_INTERNAL",
+						data: {
+							message: "Unexpected error",
+							stack: null
+						}
+					});
+
+					return;
+				}
+
+				Multiplayer.sendMessage(webSocket, {
+					type: "$ERROR_INTERNAL",
+					data: {
+						message: error.message,
+						stack: error.stack ?? null
+					}
+				});
+			}
 		});
 
 		const closeHandler = () => {
