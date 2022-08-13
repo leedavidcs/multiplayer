@@ -32,7 +32,7 @@ export interface EventConfig<
 	TOutput extends EventRecord<string, any> = {},
 	TData extends EventData = {}
 > {
-	input: InputZodLike<TData>;
+	input?: InputZodLike<TData>;
 	resolver: EventResolver<TEnv, TOutput, TData>;
 }
 
@@ -123,17 +123,21 @@ export class Multiplayer<
 		});
 	}
 
-	public config(options: MultiplayerConfigOptions<TEnv>) {
+	public config(
+		options: MultiplayerConfigOptions<TEnv>
+	): Multiplayer<TEnv, TOutput, TInput> {
 		if (this._config) {
 			throw new Error("Multiplayer has already been configured.");
 		}
 
 		this._config = options;
+
+		return this;
 	}
 
 	public event<
 		TEvent extends string,
-		TData extends EventData
+		TData extends EventData = {}
 	>(
 		event: TEvent,
 		config: EventConfig<TEnv, TOutput, TData>
@@ -234,7 +238,15 @@ export class Multiplayer<
 
 			if (!eventConfig) return;
 
-			const input = eventConfig.input.parse(config.data);
+			const input = eventConfig.input?.parse(config.data) ??
+				/**
+				 * !HACK
+				 * @description Config doesn't specify validation. Just return {}
+				 * instead in the resolver.
+				 * @author David Lee
+				 * @date August 13, 2022
+				 */
+				{} as TInput[string];
 
 			try {
 				await Promise.resolve(
