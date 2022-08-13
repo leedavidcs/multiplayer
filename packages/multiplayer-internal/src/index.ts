@@ -27,10 +27,11 @@ export type EventRecord<
 	TData extends EventData
 > = { [key in `${TEvent}`]: TData };
 
-export type InputZodLike<TData extends EventData> = {
-	_input: TData;
-	parse: (data: unknown) => TData;
-}
+export type Infer<TMultiplayer extends MultiplayerLike<any>> =
+	TMultiplayer extends MultiplayerLike<infer TInput>
+		? TInput
+		: never;
+
 
 // Messages outputed by the server WebSockets
 export type InferEventMessage<
@@ -41,13 +42,13 @@ export type InferEventMessage<
 		: never;
 }[keyof TEvents];
 
-export interface MultiplayerLike<TInput extends EventRecord<string, any>> {
+export type InputZodLike<TData extends EventData> = {
+	_input: TData;
+	parse: (data: unknown) => TData;
+}
+
+interface MultiplayerLike<TInput extends EventRecord<string, any>> {
 	_def: {
 		input: TInput;
 	};
 }
-
-export type Infer<TMultiplayer extends MultiplayerLike<any>> =
-	TMultiplayer extends MultiplayerLike<infer TInput>
-		? TInput
-		: never;

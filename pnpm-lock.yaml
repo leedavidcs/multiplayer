@@ -91,11 +91,13 @@ importers:
   packages/multiplayer-client:
     specifiers:
       '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer-internal': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       typescript: ^4.7.4
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/multiplayer-internal': link:../multiplayer-internal
       '@package/tsconfig': link:../tsconfig
       '@package/typings': link:../typings
       typescript: 4.7.4
