@@ -1,5 +1,5 @@
 {
-	"name": "@package/multiplayer",
+	"name": "@package/multiplayer-internal",
 	"version": "0.0.0",
 	"private": true,
 	"main": "src/index.ts",
@@ -7,7 +7,6 @@
 	"sideEffects": false,
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",
-		"@package/multiplayer-internal": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
 		"typescript": "^4.7.4"

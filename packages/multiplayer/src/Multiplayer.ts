@@ -1,11 +1,10 @@
 import {
-	EventConfig,
 	EventData,
 	EventMessage,
-	EventRecord,
+	InputZodLike,
 	OutputEventMessage,
 	OutputRecord
-} from "./types";
+} from "@package/multiplayer-internal";
 
 interface DefaultOutputRecord {
 	$INTERNAL_ERROR: {
@@ -25,23 +24,48 @@ interface WebSocketSession {
 	webSocket: WebSocket;
 }
 
+export interface EventResolverHelpers<
+	TEnv,
+	TOutput extends OutputRecord<string, any> = {}
+> {
+	broadcast: (message: OutputEventMessage<TOutput>) => void;
+	env: TEnv;
+}
+
+export type EventResolver<
+	TEnv,
+	TData extends EventData = {},
+	TOutput extends OutputRecord<string, any> = {}
+> = (data: TData, helpers: EventResolverHelpers<TEnv, TOutput>) => void;
+
+export interface EventConfig<TEnv, TData extends EventData = {}> {
+	input: InputZodLike<TData>;
+	resolver: EventResolver<TEnv, TData>;
+}
+
+export type InputEventRecord<
+	TEnv,
+	TEvent extends string,
+	TData extends EventData
+> = { [key in `${TEvent}`]: EventConfig<TEnv, TData> };
+
 export interface MultiplayerOptions<
 	TEnv,
-	TEvents extends EventRecord<TEnv, string, any>
+	TInput extends InputEventRecord<TEnv, string, any>
 > {
-	events?: TEvents;
+	events?: TInput;
 }
 
 export class Multiplayer<
 	TEnv,
 	TOutput extends OutputRecord<string, any> = {},
-	TEvents extends EventRecord<TEnv, string, any> = {}
+	TInput extends InputEventRecord<TEnv, string, any> = {}
 > {
-	public events: TEvents;
+	public events: TInput;
 	private sessions: WebSocketSession[] = [];
 
-	constructor(options: MultiplayerOptions<TEnv, TEvents> = {}) {
-		this.events = options.events ?? {} as TEvents;
+	constructor(options: MultiplayerOptions<TEnv, TInput> = {}) {
+		this.events = options.events ?? {} as TInput;
 	}
 
 	public broadcast(
@@ -85,12 +109,12 @@ export class Multiplayer<
 	>(
 		event: TEvent,
 		config: EventConfig<TEnv, TData>
-	): Multiplayer<TEnv, TOutput, Spread<[TEvents, EventRecord<TEnv, TEvent, TData>]>> {
+	): Multiplayer<TEnv, TOutput, Spread<[TInput, InputEventRecord<TEnv, TEvent, TData>]>> {
 		if (event.startsWith("$")) {
 			throw new Error("Event name must not start with \"$\".");
 		}
 
-		const newEvent = { [event]: config } as EventRecord<TEnv, TEvent, TData>;
+		const newEvent = { [event]: config } as InputEventRecord<TEnv, TEvent, TData>;
 
 		return Multiplayer.merge(this, new Multiplayer({ events: newEvent }));
 	}
@@ -98,12 +122,12 @@ export class Multiplayer<
 	public static merge<
 		TEnvStatic,
 		TOutputStatic extends OutputRecord<string, any>,
-		TEventsStatic1 extends EventRecord<TEnvStatic, string, any>,
-		TEventsStatic2 extends EventRecord<TEnvStatic, string, any>
+		TInputStatic1 extends InputEventRecord<TEnvStatic, string, any>,
+		TInputStatic2 extends InputEventRecord<TEnvStatic, string, any>
 	>(
-		multiplayer1: Multiplayer<TEnvStatic, TOutputStatic, TEventsStatic1>,
-		multiplayer2: Multiplayer<TEnvStatic, TOutputStatic, TEventsStatic2>
-	): Multiplayer<TEnvStatic, TOutputStatic, Spread<[TEventsStatic1, TEventsStatic2]>> {
+		multiplayer1: Multiplayer<TEnvStatic, TOutputStatic, TInputStatic1>,
+		multiplayer2: Multiplayer<TEnvStatic, TOutputStatic, TInputStatic2>
+	): Multiplayer<TEnvStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
 		const events1 = multiplayer1.events;
 		const events2 = multiplayer2.events;
 
