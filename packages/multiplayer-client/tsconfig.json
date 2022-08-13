@@ -1,0 +1,12 @@
+{
+	"extends": "@package/tsconfig/base.json",
+	"include": [
+		"types.d.ts",
+		"**/*.ts"
+	],
+	"compilerOptions": {
+		"baseUrl": "./src",
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"types": ["types.d.ts"]
+	}
+}
