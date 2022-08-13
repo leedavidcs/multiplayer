@@ -50,6 +50,10 @@ export interface MultiplayerOptions<
 	events?: InferEventConfig<TEnv, TOutput, TInput>;
 }
 
+export interface MultiplayerConfigOptions<TEnv> {
+	env: TEnv;
+};
+
 export type InferEventConfig<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {},
@@ -65,12 +69,20 @@ export class Multiplayer<
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
 > {
+	/**
+	 * !HACK
+	 * @description This is only used for type inferences in a generic way
+	 * @author David Lee
+	 * @date August 13, 2022
+	 */
 	readonly _def: {
 		input: TInput;
 	} = {} as any;
 
+	private _config: MultiplayerConfigOptions<TEnv> | null = null;
+	private _sessions: WebSocketSession[] = [];
+
 	public events: InferEventConfig<TEnv, TOutput, TInput>;
-	private sessions: WebSocketSession[] = [];
 
 	constructor(options: MultiplayerOptions<TEnv, TOutput, TInput> = {}) {
 		this.events = options.events ?? {} as TInput;
@@ -79,7 +91,7 @@ export class Multiplayer<
 	public broadcast(
 		message: InferEventMessage<TOutput> | DefaultOutputMessage
 	): void {
-		const { stayers, quitters } = this.sessions.reduce(
+		const { stayers, quitters } = this._sessions.reduce(
 			(state, session) => {
 				return session.quit
 					? {
@@ -97,7 +109,7 @@ export class Multiplayer<
 			}
 		);
 
-		this.sessions = stayers;
+		this._sessions = stayers;
 
 		stayers.forEach((stayer) => {
 			Multiplayer.sendMessage(stayer.webSocket, message);
@@ -109,6 +121,14 @@ export class Multiplayer<
 				data: { id: quitter.id }
 			});
 		});
+	}
+
+	public config(options: MultiplayerConfigOptions<TEnv>) {
+		if (this._config) {
+			throw new Error("Multiplayer has already been configured.");
+		}
+
+		this._config = options;
 	}
 
 	public event<
@@ -181,7 +201,13 @@ export class Multiplayer<
 		}
 	}
 
-	public register(webSocket: WebSocket, env: TEnv): void {
+	public register(webSocket: WebSocket): void {
+		if (!this.config) {
+			throw new Error(
+				"Must call \"config\" before registering a new WebSocket."
+			);
+		}
+
 		webSocket.accept();
 
 		const session: WebSocketSession = {
@@ -190,7 +216,7 @@ export class Multiplayer<
 			webSocket
 		};
 
-		this.sessions.push(session);
+		this._sessions.push(session);
 
 		webSocket.addEventListener("message", async (message) => {
 			const config = Multiplayer.parseMessage(message);
@@ -214,7 +240,8 @@ export class Multiplayer<
 				await Promise.resolve(
 					eventConfig.resolver(input, {
 						broadcast: this.broadcast,
-						env
+						/* eslint-disable-next-line */
+						env: this._config!.env
 					})
 				);
 			} catch (error) {
@@ -243,7 +270,7 @@ export class Multiplayer<
 		const closeHandler = () => {
 			session.quit = true;
 
-			this.sessions = this.sessions.filter((member) => member !== session);
+			this._sessions = this._sessions.filter((member) => member !== session);
 
 			this.broadcast({
 				type: "$INTERNAL_QUIT",
