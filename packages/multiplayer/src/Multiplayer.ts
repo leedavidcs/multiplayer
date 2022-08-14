@@ -160,6 +160,32 @@ export class Multiplayer<
 		return Multiplayer.merge(this, new Multiplayer({ events: newEvent }));
 	}
 
+	public handleWsError(
+		webSocket: WebSocket,
+		error: unknown,
+		message?: string
+	): void {
+		if (!(error instanceof Error)) {
+			Multiplayer.sendMessage(webSocket, {
+				type: "$ERROR_INTERNAL",
+				data: {
+					message: "Unexpected error",
+					stack: null
+				}
+			});
+
+			return;
+		}
+
+		Multiplayer.sendMessage(webSocket, {
+			type: "$ERROR_INTERNAL",
+			data: {
+				message: message ?? error.message,
+				stack: error.stack ?? null
+			}
+		});
+	}
+
 	public static merge<
 		TEnvStatic,
 		TOutputStatic extends EventRecord<string, any>,
@@ -238,15 +264,24 @@ export class Multiplayer<
 
 			if (!eventConfig) return;
 
-			const input = eventConfig.input?.parse(config.data) ??
-				/**
-				 * !HACK
-				 * @description Config doesn't specify validation. Just return {}
-				 * instead in the resolver.
-				 * @author David Lee
-				 * @date August 13, 2022
-				 */
-				{} as TInput[string];
+			let input: TInput[string]
+
+			try {
+				input = eventConfig.input?.parse(config.data) ??
+					/**
+					 * !HACK
+					 * @description Config doesn't specify validation. Just return {}
+					 * instead in the resolver.
+					 * @author David Lee
+					 * @date August 13, 2022
+					 */
+					{} as TInput[string];
+			} catch(error) {
+				this.handleWsError(webSocket, error, "Invalid input");
+
+				return;
+			}
+
 
 			try {
 				await Promise.resolve(
@@ -257,25 +292,7 @@ export class Multiplayer<
 					})
 				);
 			} catch (error) {
-				if (!(error instanceof Error)) {
-					Multiplayer.sendMessage(webSocket, {
-						type: "$ERROR_INTERNAL",
-						data: {
-							message: "Unexpected error",
-							stack: null
-						}
-					});
-
-					return;
-				}
-
-				Multiplayer.sendMessage(webSocket, {
-					type: "$ERROR_INTERNAL",
-					data: {
-						message: error.message,
-						stack: error.stack ?? null
-					}
-				});
+				this.handleWsError(webSocket, error);
 			}
 		});
 
