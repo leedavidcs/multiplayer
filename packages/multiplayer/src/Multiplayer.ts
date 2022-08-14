@@ -249,7 +249,7 @@ export class Multiplayer<
 		this._sessions.push(session);
 
 		webSocket.addEventListener("message", async (message) => {
-			const config = Multiplayer.parseMessage(message);
+			const rawMessage = Multiplayer.parseMessage(message);
 
 			/**
 			 * !HACK
@@ -258,16 +258,16 @@ export class Multiplayer<
 			 * @author David Lee
 			 * @date August 10, 2022
 			 */
-			if (!config) return;
+			if (!rawMessage) return;
 
-			const eventConfig = this.events[config.type] ?? null;
+			const eventConfig = this.events[rawMessage.type] ?? null;
 
 			if (!eventConfig) return;
 
 			let input: TInput[string]
 
 			try {
-				input = eventConfig.input?.parse(config.data) ??
+				input = eventConfig.input?.parse(rawMessage.data) ??
 					/**
 					 * !HACK
 					 * @description Config doesn't specify validation. Just return {}
