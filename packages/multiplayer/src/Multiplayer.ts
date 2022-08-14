@@ -13,7 +13,7 @@ interface WebSocketSession {
 	webSocket: WebSocket;
 }
 
-export interface EventResolverHelpers<
+interface EventResolverHelpers<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {}
 > {
@@ -36,12 +36,6 @@ export interface EventConfig<
 	resolver: EventResolver<TEnv, TOutput, TData>;
 }
 
-export type InputEventRecord<
-	TEnv,
-	TEvent extends string,
-	TData extends EventData
-> = { [key in `${TEvent}`]: EventConfig<TEnv, TData> };
-
 export interface MultiplayerOptions<
 	TEnv,
 	TOutput extends EventRecord<string, any>,
@@ -54,7 +48,7 @@ export interface MultiplayerConfigOptions<TEnv> {
 	env: TEnv;
 };
 
-export type InferEventConfig<
+type InferEventConfig<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {},
 	TEvents extends EventRecord<string, any> = {}
