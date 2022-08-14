@@ -36,18 +36,6 @@ export interface EventConfig<
 	resolver: EventResolver<TEnv, TOutput, TData>;
 }
 
-export interface MultiplayerOptions<
-	TEnv,
-	TOutput extends EventRecord<string, any>,
-	TInput extends EventRecord<string, any>
-> {
-	events?: InferEventConfig<TEnv, TOutput, TInput>;
-}
-
-export interface MultiplayerConfigOptions<TEnv> {
-	env: TEnv;
-};
-
 type InferEventConfig<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {},
@@ -57,6 +45,18 @@ type InferEventConfig<
 		? Id<EventConfig<TEnv, TOutput, TEvents[P]>>
 		: never;
 };
+
+export interface MultiplayerConfigOptions<TEnv> {
+	env: TEnv;
+};
+
+export interface MultiplayerOptions<
+	TEnv,
+	TOutput extends EventRecord<string, any>,
+	TInput extends EventRecord<string, any>
+> {
+	events?: InferEventConfig<TEnv, TOutput, TInput>;
+}
 
 export class Multiplayer<
 	TEnv,
@@ -79,7 +79,8 @@ export class Multiplayer<
 	public events: InferEventConfig<TEnv, TOutput, TInput>;
 
 	constructor(options: MultiplayerOptions<TEnv, TOutput, TInput> = {}) {
-		this.events = options.events ?? {} as TInput;
+		this.events = options.events
+			?? {} as InferEventConfig<TEnv, TOutput, TInput>;
 	}
 
 	public broadcast(
