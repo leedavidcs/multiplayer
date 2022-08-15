@@ -10,6 +10,8 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "^3.14.1",
 		"@package/eslint-config-custom": "workspace:*",
+		"@package/multiplayer": "workspace:*",
+		"@package/multiplayer-internal": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
 		"@package/wrangler-utils": "workspace:*",

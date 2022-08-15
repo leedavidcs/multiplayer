@@ -48,6 +48,7 @@ type InferEventConfig<
 
 export interface MultiplayerConfigOptions<TEnv> {
 	env: TEnv;
+	storage: DurableObjectStorage;
 };
 
 export interface MultiplayerOptions<

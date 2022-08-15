@@ -8,6 +8,8 @@
 		"baseUrl": ".",
 		"types": ["types.d.ts"],
 		"paths": {
+			"@package/multiplayer": ["../../packages/multiplayer/src"],
+			"@package/multiplayer-internal": ["../../packages/multiplayer-internal/src"],
 			"@package/wrangler-utils": ["../../packages/wrangler-utils/src"]
 		}
 	}

@@ -16,6 +16,8 @@ importers:
     specifiers:
       '@cloudflare/workers-types': ^3.14.1
       '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer': workspace:*
+      '@package/multiplayer-internal': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       '@package/wrangler-utils': workspace:*
@@ -24,6 +26,8 @@ importers:
     devDependencies:
       '@cloudflare/workers-types': 3.14.1
       '@package/eslint-config-custom': link:../../packages/eslint-config-custom
+      '@package/multiplayer': link:../../packages/multiplayer
+      '@package/multiplayer-internal': link:../../packages/multiplayer-internal
       '@package/tsconfig': link:../../packages/tsconfig
       '@package/typings': link:../../packages/typings
       '@package/wrangler-utils': link:../../packages/wrangler-utils
