@@ -1,10 +1,13 @@
 interface DefaultServerEventRecord {
-	$INTERNAL_ERROR: {
+	$ERROR: {
 		message: string;
-		stack: string | null;
+		stack?: string | null;
 	};
-	$INTERNAL_QUIT: {
-		id: string;
+	$ENTER_ROOM: {
+		roomId?: string | null;
+	};
+	$EXIT_ROOM: {
+		connectionId: string;
 	};
 }
 

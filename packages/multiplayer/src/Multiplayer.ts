@@ -113,8 +113,10 @@ export class Multiplayer<
 
 		quitters.forEach((quitter) => {
 			this.broadcast({
-				type: "$INTERNAL_QUIT",
-				data: { id: quitter.id }
+				type: "$EXIT_ROOM",
+				data: {
+					connectionId: quitter.id
+				}
 			});
 		});
 	}
@@ -163,7 +165,7 @@ export class Multiplayer<
 	): void {
 		if (!(error instanceof Error)) {
 			Multiplayer.sendMessage(webSocket, {
-				type: "$ERROR_INTERNAL",
+				type: "$ERROR",
 				data: {
 					message: "Unexpected error",
 					stack: null
@@ -174,7 +176,7 @@ export class Multiplayer<
 		}
 
 		Multiplayer.sendMessage(webSocket, {
-			type: "$ERROR_INTERNAL",
+			type: "$ERROR",
 			data: {
 				message: message ?? error.message,
 				stack: error.stack ?? null
@@ -298,8 +300,10 @@ export class Multiplayer<
 			this._sessions = this._sessions.filter((member) => member !== session);
 
 			this.broadcast({
-				type: "$INTERNAL_QUIT",
-				data: { id: session.id }
+				type: "$EXIT_ROOM",
+				data: {
+					connectionId: session.id
+				}
 			});
 		};
 
