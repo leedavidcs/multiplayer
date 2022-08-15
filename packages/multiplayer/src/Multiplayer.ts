@@ -7,9 +7,15 @@ import {
 	InputZodLike
 } from "@package/multiplayer-internal";
 
+interface WebSocketRoom {
+	id: string;
+	userIds: readonly string[];
+}
+
 interface WebSocketSession {
 	id: string;
 	quit: boolean;
+	roomIds: readonly string[];
 	webSocket: WebSocket;
 }
 
@@ -75,7 +81,8 @@ export class Multiplayer<
 	} = {} as any;
 
 	private _config: MultiplayerConfigOptions<TEnv> | null = null;
-	private _sessions: WebSocketSession[] = [];
+	private _rooms = new Map<string, WebSocketRoom>();
+	private _sessions = new Map<string, WebSocketSession>();
 
 	public events: InferEventConfig<TEnv, TOutput, TInput>;
 
@@ -87,28 +94,18 @@ export class Multiplayer<
 	public broadcast(
 		message: InferEventMessage<TOutput> | DefaultOutputMessage
 	): void {
-		const { stayers, quitters } = this._sessions.reduce(
-			(state, session) => {
-				return session.quit
-					? {
-						stayers: state.stayers,
-						quitters: [...state.quitters, session]
-					}
-					: {
-						stayers: [...state.stayers, session],
-						quitters: state.quitters
-					};
-			},
-			{
-				stayers: [] as WebSocketSession[],
-				quitters: [] as WebSocketSession[]
-			}
-		);
+		const quitters: WebSocketSession[] = [];
 
-		this._sessions = stayers;
+		this._sessions.forEach((session) => {
+			quitters.push(session);
+		});
 
-		stayers.forEach((stayer) => {
-			Multiplayer.sendMessage(stayer.webSocket, message);
+		quitters.forEach((session) => {
+			this._sessions.delete(session.id);
+		});
+
+		this._sessions.forEach((session) => {
+			Multiplayer.sendMessage(session.webSocket, message);
 		});
 
 		quitters.forEach((quitter) => {
@@ -241,10 +238,11 @@ export class Multiplayer<
 		const session: WebSocketSession = {
 			id: crypto.randomUUID(),
 			quit: false,
+			roomIds: [],
 			webSocket
 		};
 
-		this._sessions.push(session);
+		this._sessions.set(session.id, session)
 
 		webSocket.addEventListener("message", async (message) => {
 			const rawMessage = Multiplayer.parseMessage(message);
@@ -297,7 +295,7 @@ export class Multiplayer<
 		const closeHandler = () => {
 			session.quit = true;
 
-			this._sessions = this._sessions.filter((member) => member !== session);
+			this._sessions.delete(session.id);
 
 			this.broadcast({
 				type: "$EXIT_ROOM",
