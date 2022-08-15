@@ -23,7 +23,7 @@ interface EventResolverHelpers<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {}
 > {
-	broadcast: (message: InferEventMessage<TOutput>) => void;
+	broadcast: (roomId: string, message: InferEventMessage<TOutput>) => void;
 	env: TEnv;
 }
 
@@ -92,6 +92,7 @@ export class Multiplayer<
 	}
 
 	public broadcast(
+		roomId: string,
 		message: InferEventMessage<TOutput> | DefaultOutputMessage
 	): void {
 		const quitters: WebSocketSession[] = [];
@@ -109,10 +110,11 @@ export class Multiplayer<
 		});
 
 		quitters.forEach((quitter) => {
-			this.broadcast({
+			this.broadcast(roomId, {
 				type: "$EXIT_ROOM",
 				data: {
-					connectionId: quitter.id
+					connectionId: quitter.id,
+					roomId
 				}
 			});
 		});
@@ -297,11 +299,14 @@ export class Multiplayer<
 
 			this._sessions.delete(session.id);
 
-			this.broadcast({
-				type: "$EXIT_ROOM",
-				data: {
-					connectionId: session.id
-				}
+			session.roomIds.forEach((roomId) => {
+				this.broadcast(roomId, {
+					type: "$EXIT_ROOM",
+					data: {
+						connectionId: session.id,
+						roomId
+					}
+				});
 			});
 		};
 

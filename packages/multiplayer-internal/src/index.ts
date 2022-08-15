@@ -8,22 +8,40 @@ interface DefaultServerEventRecord {
 	};
 	$EXIT_ROOM: {
 		connectionId: string;
+		roomId: string;
 	};
 }
 
-export type DefaultOutputMessage = InferEventMessage<
+export type DefaultOutputMessage = InferInternalEventMessage<
 	DefaultServerEventRecord
 >;
 
 export type EventData = Record<string, Json>;
 
-export interface EventMessage<
+export interface RoomEventMessage<
+	TEvent extends string,
+	TData extends EventData
+> {
+	data: TData;
+	roomId: string;
+	type: TEvent;
+}
+
+export interface InternalEventMessage<
 	TEvent extends string,
 	TData extends EventData
 > {
 	data: TData;
 	type: TEvent;
 }
+
+export type EventMessage<
+	TEvent extends string,
+	TData extends EventData
+> =
+	| RoomEventMessage<TEvent, TData>
+	| InternalEventMessage<TEvent, TData>
+;
 
 export type EventRecord<
 	TEvent extends string,
@@ -41,7 +59,16 @@ export type InferEventMessage<
 	TEvents extends EventRecord<string, any>
 > = {
 	[P in keyof TEvents]: P extends string
-		? Id<EventMessage<P, TEvents[P]>>
+		? Id<Omit<EventMessage<P, TEvents[P]>, keyof DefaultServerEventRecord>>
+		: never;
+}[keyof TEvents];
+
+// Messages outputed by the server WebSockets
+export type InferInternalEventMessage<
+	TEvents extends EventRecord<string, any>
+> = {
+	[P in keyof TEvents]: P extends string
+		? Id<InternalEventMessage<P, TEvents[P]>>
 		: never;
 }[keyof TEvents];
 
