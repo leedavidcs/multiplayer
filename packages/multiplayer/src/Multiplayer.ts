@@ -7,15 +7,9 @@ import {
 	InputZodLike
 } from "@package/multiplayer-internal";
 
-interface WebSocketRoom {
-	id: string;
-	userIds: readonly string[];
-}
-
 interface WebSocketSession {
 	id: string;
 	quit: boolean;
-	roomIds: readonly string[];
 	webSocket: WebSocket;
 }
 
@@ -23,7 +17,7 @@ interface EventResolverHelpers<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {}
 > {
-	broadcast: (roomId: string, message: InferEventMessage<TOutput>) => void;
+	broadcast: (message: InferEventMessage<TOutput>) => void;
 	env: TEnv;
 }
 
@@ -81,7 +75,6 @@ export class Multiplayer<
 	} = {} as any;
 
 	private _config: MultiplayerConfigOptions<TEnv> | null = null;
-	private _rooms = new Map<string, WebSocketRoom>();
 	private _sessions = new Map<string, WebSocketSession>();
 
 	public events: InferEventConfig<TEnv, TOutput, TInput>;
@@ -92,7 +85,6 @@ export class Multiplayer<
 	}
 
 	public broadcast(
-		roomId: string,
 		message: InferEventMessage<TOutput> | DefaultOutputMessage
 	): void {
 		const quitters: WebSocketSession[] = [];
@@ -110,11 +102,10 @@ export class Multiplayer<
 		});
 
 		quitters.forEach((quitter) => {
-			this.broadcast(roomId, {
-				type: "$EXIT_ROOM",
+			this.broadcast({
+				type: "$EXIT",
 				data: {
-					connectionId: quitter.id,
-					roomId
+					sessionId: quitter.id,
 				}
 			});
 		});
@@ -240,7 +231,6 @@ export class Multiplayer<
 		const session: WebSocketSession = {
 			id: crypto.randomUUID(),
 			quit: false,
-			roomIds: [],
 			webSocket
 		};
 
@@ -280,7 +270,6 @@ export class Multiplayer<
 				return;
 			}
 
-
 			try {
 				await Promise.resolve(
 					eventConfig.resolver(input, {
@@ -299,14 +288,11 @@ export class Multiplayer<
 
 			this._sessions.delete(session.id);
 
-			session.roomIds.forEach((roomId) => {
-				this.broadcast(roomId, {
-					type: "$EXIT_ROOM",
-					data: {
-						connectionId: session.id,
-						roomId
-					}
-				});
+			this.broadcast({
+				type: "$EXIT",
+				data: {
+					sessionId: session.id,
+				}
 			});
 		};
 
