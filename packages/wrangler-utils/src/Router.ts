@@ -19,8 +19,15 @@ export type PathParams<T extends string> = T extends string
 			: {}
 	: `Error: Could not resolve path: ${T}`;
 
-type RouterPathHandler<TEnv, T extends PathParamRecord<string, any>> =
-	(params: Id<T>, request: Request, env: TEnv) => Promise<Response> | Response | void;
+interface RouterPathHandlerHelpers<TEnv> {
+	env: TEnv;
+	request: Request;
+}
+
+type RouterPathHandler<TEnv, T extends PathParamRecord<string, any>> = (
+	params: Id<T>,
+	helpers: RouterPathHandlerHelpers<TEnv>
+) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
 	TEnv,
@@ -28,11 +35,17 @@ type RouterPathRecord<
 	TPathParams extends PathParams<TPathName>
 > = Record<TPathName, RouterPathHandler<TEnv, Id<TPathParams>>>;
 
+export interface RouterConfigOptions<TEnv> {
+	env: TEnv;
+}
+
 export interface RouterOptions<TEnv, TPaths extends RouterPathRecord<TEnv, string, any>> {
 	paths?: TPaths;
 }
 
 export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {}> {
+	private _config: RouterConfigOptions<TEnv> | null = null;
+	
 	/**
 	 * !HACK
 	 * @description We're relying on a non-guaranteed property of objects, with
@@ -47,7 +60,23 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 		this.paths = options.paths ?? {} as TPaths;
 	}
 
-	public async match(request: Request, env: TEnv): Promise<Response> {
+	public config(options: RouterConfigOptions<TEnv>): Router<TEnv, TPaths> {
+		if (this._config) {
+			throw new Error("Router has already been configured");
+		}
+
+		this._config = options;
+
+		return this;
+	}
+
+	public async match(request: Request): Promise<Response> {
+		if (!this._config) {
+			throw new Error(
+				"Must call \"config\" before matching a new request."
+			);
+		}
+
 		const url = new URL(request.url);
 		const patterns = Object.keys(this.paths);
 		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
@@ -63,7 +92,10 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 
 		if (!handler) return new Response("Not found", { status: 404 });
 
-		return await handler(params, request, env) ?? new Response("OK", { status: 200 });
+		return await handler(params, {
+			request,
+			env: this._config.env
+		}) ?? new Response("OK", { status: 200 });
 	}
 
 	public static merge<
