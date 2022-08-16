@@ -220,7 +220,7 @@ export class Multiplayer<
 	}
 
 	public register(webSocket: WebSocket): void {
-		if (!this.config) {
+		if (!this._config) {
 			throw new Error(
 				"Must call \"config\" before registering a new WebSocket."
 			);
