@@ -61,6 +61,18 @@ importers:
       next-transpile-modules: 9.0.0
       typescript: 4.7.4
 
+  packages/common-utils:
+    specifiers:
+      '@package/eslint-config-custom': workspace:*
+      '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
+      typescript: ^4.7.4
+    devDependencies:
+      '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/tsconfig': link:../tsconfig
+      '@package/typings': link:../typings
+      typescript: 4.7.4
+
   packages/eslint-config-custom:
     specifiers:
       eslint: ^8.21.0
