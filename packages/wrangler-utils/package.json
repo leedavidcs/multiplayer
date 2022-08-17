@@ -6,6 +6,7 @@
 	"types": "src/index.ts",
 	"sideEffects": false,
 	"dependencies": {
+		"@package/common-utils": "workspace:*",
 		"path-to-regexp": "^6.2.1"
 	},
 	"devDependencies": {

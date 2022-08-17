@@ -160,11 +160,13 @@ importers:
 
   packages/wrangler-utils:
     specifiers:
+      '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       path-to-regexp: ^6.2.1
     dependencies:
+      '@package/common-utils': link:../common-utils
       path-to-regexp: 6.2.1
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
