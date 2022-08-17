@@ -1,5 +1,3 @@
-import { ArrayUtils } from "@package/common-utils";
-
 export interface RateLimiterOptions {
 	// Time window in ms
 	duration: number;
