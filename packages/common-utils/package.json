@@ -10,5 +10,8 @@
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
 		"typescript": "^4.7.4"
+	},
+	"dependencies": {
+		"ms": "3.0.0-canary.1"
 	}
 }

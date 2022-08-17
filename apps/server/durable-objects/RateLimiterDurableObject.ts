@@ -1,13 +1,19 @@
-import { RequestUtils } from "@package/wrangler-utils";
+import { RateLimiter, RequestUtils } from "@package/wrangler-utils";
+import { ms } from "@package/common-utils";
+
+const MAX_REQUESTS = 250;
+const DURATION = ms("1m");
+
 
 export class RateLimiterDurableObject implements DurableObject {
-	private requestTimes: number[] = [];
+	private _rateLimiter = new RateLimiter({
+		duration: DURATION,
+		maxRequests: MAX_REQUESTS
+	});
 
 	async fetch(request: Request): Promise<Response> {
 		return await RequestUtils.handleErrors(request, async () => {
-			const now = Date.now();
-
-			this.requestTimes.push(now);
+			return new Response(JSON.stringify(this._rateLimiter.checkLimit()));
 		});
 	}
 }
