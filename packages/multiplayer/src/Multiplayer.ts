@@ -237,6 +237,13 @@ export class Multiplayer<
 		this._sessions.set(session.id, session)
 
 		webSocket.addEventListener("message", async (message) => {
+			// Should not reach here. But handling it just in-case.
+			if (session.quit) {
+				webSocket.close(1011, "WebSocket broken");
+
+				return;
+			}
+
 			const rawMessage = Multiplayer.parseMessage(message);
 
 			/**
