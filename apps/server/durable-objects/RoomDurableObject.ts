@@ -12,6 +12,16 @@ export class RoomDurableObject implements DurableObject {
 
 			const [client, server] = WebSocketUtils.makeWebSocketPair();
 
+			const requestIp: string = RequestUtils.getRequestIp(request);
+			const limiterId = this.env.limiters.idFromName(requestIp);
+
+			/**
+			 * TODO
+			 * @description Connect limiter to multiplayer message event
+			 * @author David Lee
+			 * @date August 18, 2022
+			 */
+
 			this.multiplayer.register(server);
 
 			return new Response(null, { status: 101, webSocket: client });
