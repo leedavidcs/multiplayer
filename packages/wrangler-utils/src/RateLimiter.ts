@@ -43,6 +43,18 @@ export class RateLimiter {
 		return { limit, remaining, reset, resetMs };
 	}
 
+	public static getDefaultState(options: RateLimiterOptions) {
+		const nowMs: number = Date.now();
+		const resetMs: number = nowMs + options.duration;
+
+		return {
+			limit: options.maxRequests,
+			remaining: options.maxRequests,
+			reset: resetMs / 1_000,
+			resetMs
+		};
+	}
+
 	private getResetTime(): number {
 		const nowMs = Date.now();
 
