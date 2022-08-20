@@ -1,9 +1,8 @@
-import { RateLimiter, RequestUtils } from "@package/wrangler-utils";
 import { ms } from "@package/common-utils";
+import { RateLimiter, RequestUtils } from "@package/wrangler-utils";
 
 const MAX_REQUESTS = 250;
 const DURATION = ms("1m");
-
 
 export class RateLimiterDurableObject implements DurableObject {
 	private _rateLimiter = new RateLimiter({

@@ -32,7 +32,7 @@ export class RateLimiterClient {
 	public checkLimit(): RateLimiterCheckLimitResult {
 		if (this._state) return this._state;
 
-		this.callLimiter();
+		this._callLimiter();
 
 		return RateLimiter.getDefaultState({
 			duration: this._config.duration,
@@ -40,7 +40,7 @@ export class RateLimiterClient {
 		});
 	}
 
-	private async callLimiter(): Promise<void> {
+	private async _callLimiter(): Promise<void> {
 		try {
 			let response: RateLimiterCheckLimitResult;
 

@@ -99,7 +99,7 @@ export class Multiplayer<
 		});
 
 		this._sessions.forEach((session) => {
-			Multiplayer.sendMessage(session.webSocket, message);
+			Multiplayer._sendMessage(session.webSocket, message);
 		});
 
 		quitters.forEach((quitter) => {
@@ -155,7 +155,7 @@ export class Multiplayer<
 		message?: string
 	): void {
 		if (!(error instanceof Error)) {
-			Multiplayer.sendMessage(webSocket, {
+			Multiplayer._sendMessage(webSocket, {
 				type: "$ERROR",
 				data: {
 					message: "Unexpected error",
@@ -166,7 +166,7 @@ export class Multiplayer<
 			return;
 		}
 
-		Multiplayer.sendMessage(webSocket, {
+		Multiplayer._sendMessage(webSocket, {
 			type: "$ERROR",
 			data: {
 				message: message ?? error.message,
@@ -190,30 +190,6 @@ export class Multiplayer<
 		const mergedEvents = ObjectUtils.safeAssign(events1, events2);
 
 		return new Multiplayer({ events: mergedEvents as any });
-	}
-
-	private static parseMessage(
-		message: MessageEvent
-	): EventMessage<string, any> | null {
-		/**
-		 * !HACK
-		 * @description We'll only handle stringified JSONs for now
-		 * @author David Lee
-		 * @date August 9, 2022
-		 */
-		if (typeof message.data !== "string") return null;
-
-		try {
-			const config = JSON.parse(message.data);
-
-			if (typeof config !== "object") return null;
-			if (typeof config.type !== "string") return null;
-			if (typeof config.data !== "object") return null;
-
-			return config as EventMessage<string, any>;
-		} catch {
-			return null;
-		}
 	}
 
 	public register(webSocket: WebSocket): void {
@@ -241,7 +217,7 @@ export class Multiplayer<
 				return;
 			}
 
-			const rawMessage = Multiplayer.parseMessage(message);
+			const rawMessage = Multiplayer._parseMessage(message);
 
 			/**
 			 * !HACK
@@ -304,7 +280,31 @@ export class Multiplayer<
 		webSocket.addEventListener("error", closeHandler);
 	}
 
-	private static sendMessage<
+	private static _parseMessage(
+		message: MessageEvent
+	): EventMessage<string, any> | null {
+		/**
+		 * !HACK
+		 * @description We'll only handle stringified JSONs for now
+		 * @author David Lee
+		 * @date August 9, 2022
+		 */
+		if (typeof message.data !== "string") return null;
+
+		try {
+			const config = JSON.parse(message.data);
+
+			if (typeof config !== "object") return null;
+			if (typeof config.type !== "string") return null;
+			if (typeof config.data !== "object") return null;
+
+			return config as EventMessage<string, any>;
+		} catch {
+			return null;
+		}
+	}
+
+	private static _sendMessage<
 		TMessage extends EventMessage<string, any> = EventMessage<string, any>
 	>(webSocket: WebSocket, data: TMessage): void {
 		webSocket.send(JSON.stringify(data));

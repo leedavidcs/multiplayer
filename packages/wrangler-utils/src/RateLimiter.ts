@@ -26,7 +26,7 @@ export class RateLimiter {
 	}
 
 	public checkLimit(): RateLimiterCheckLimitResult {
-		const resetMs = this.getResetTime();
+		const resetMs = this._getResetTime();
 		const reset = resetMs / 1_000;
 
 		const windowStart = resetMs - this._options.duration;
@@ -55,7 +55,7 @@ export class RateLimiter {
 		};
 	}
 
-	private getResetTime(): number {
+	private _getResetTime(): number {
 		const nowMs = Date.now();
 
 		if (!this._resetTime || nowMs > this._resetTime) {

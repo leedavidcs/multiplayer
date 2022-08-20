@@ -2,9 +2,9 @@ import { createRouter, RequestUtils, WebSocketUtils } from "@package/wrangler-ut
 import { createMultiplayer } from "@package/multiplayer";
 
 export class RoomDurableObject implements DurableObject {
-	private env: Env;
-	private multiplayer = createMultiplayer<Env, {}>();
-	private router = createRouter<Env>()
+	private _env: Env;
+	private _multiplayer = createMultiplayer<Env, {}>();
+	private _router = createRouter<Env>()
 		.path("/websocket", (__, { request }) => {
 			if (!RequestUtils.isWebSocketRequest(request)) {
 				return new Response("Expected websocket", { status: 400 });
@@ -13,7 +13,7 @@ export class RoomDurableObject implements DurableObject {
 			const [client, server] = WebSocketUtils.makeWebSocketPair();
 
 			const requestIp: string = RequestUtils.getRequestIp(request);
-			const limiterId = this.env.limiters.idFromName(requestIp);
+			const limiterId = this._env.limiters.idFromName(requestIp);
 
 			/**
 			 * TODO
@@ -22,25 +22,25 @@ export class RoomDurableObject implements DurableObject {
 			 * @date August 18, 2022
 			 */
 
-			this.multiplayer.register(server);
+			this._multiplayer.register(server);
 
 			return new Response(null, { status: 101, webSocket: client });
 		});
 
 	constructor(state: DurableObjectState, env: Env) {
-		this.env = env;
+		this._env = env;
 
-		this.multiplayer.config({
+		this._multiplayer.config({
 			env,
 			storage: state.storage
 		});
 
-		this.router.config({ env });
+		this._router.config({ env });
 	}
 
 	async fetch(request: Request): Promise<Response> {
 		return await RequestUtils.handleErrors(request, async () => {
-			return await this.router.match(request);
+			return await this._router.match(request);
 		});
 	}
 }

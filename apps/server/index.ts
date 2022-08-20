@@ -8,7 +8,7 @@ const router = createRouter<Env>()
 			return new Response("Method not allowed", { status: 405 });
 		}
 
-		const roomId: DurableObjectId = env.rooms.newUniqueId();
+		const roomId = env.rooms.newUniqueId();
 
 		return new Response(roomId.toString(), {
 			headers: { "access-control-allow-origin": "*" }
