@@ -3,18 +3,18 @@ import { createRouter, DurableObjectUtils } from "@package/wrangler-utils";
 export { RoomDurableObject } from "./durable-objects";
 
 const router = createRouter<Env>()
-	.path("/api/room", async (params, request, env) => {
+	.path("/api/room", async (params, { request, env }) => {
 		if (request.method !== "POST") {
 			return new Response("Method not allowed", { status: 405 });
 		}
 
-		const roomId = env.rooms.newUniqueId();
+		const roomId: DurableObjectId = env.rooms.newUniqueId();
 
 		return new Response(roomId.toString(), {
 			headers: { "access-control-allow-origin": "*" }
 		});
 	})
-	.path("/api/room/:rest*", async ({ rest }, request, env) => {
+	.path("/api/room/:rest*", async ({ rest }, { request, env }) => {
 		const [name, ...restPath] = rest;
 		const forwardUrl = `/${restPath.join("/")}`;
 
@@ -34,6 +34,8 @@ const router = createRouter<Env>()
 
 const worker: ExportedHandler<Env> = {
 	async fetch(request: Request, env: Env): Promise<Response> {
-		return router.match(request, env);
+		return router
+			.config({ env })
+			.match(request);
 	}
 };
