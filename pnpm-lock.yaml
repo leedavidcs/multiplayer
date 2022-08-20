@@ -98,11 +98,14 @@ importers:
 
   packages/multiplayer:
     specifiers:
+      '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
       '@package/multiplayer-internal': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       typescript: ^4.7.4
+    dependencies:
+      '@package/common-utils': link:../common-utils
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/multiplayer-internal': link:../multiplayer-internal
@@ -112,11 +115,14 @@ importers:
 
   packages/multiplayer-client:
     specifiers:
+      '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
       '@package/multiplayer-internal': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       typescript: ^4.7.4
+    dependencies:
+      '@package/common-utils': link:../common-utils
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/multiplayer-internal': link:../multiplayer-internal

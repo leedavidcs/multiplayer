@@ -1,3 +1,4 @@
+import { ObjectUtils } from "@package/common-utils";
 import {
 	EventData,
 	EventRecord,
@@ -76,15 +77,11 @@ export class MultiplayerClient<
 		const events1 = multiplayer1.events;
 		const events2 = multiplayer2.events;
 
-		/**
-		 * TODO
-		 * @description Create an object utility to safely merge two records with proper types
-		 * @author David Lee
-		 * @date August 14, 2022
-		 */
+		const mergedEvents = ObjectUtils.safeAssign(events1, events2);
+
 		return new MultiplayerClient({
 			apiEndpoint: multiplayer1.apiEndpoint,
-			events: { ...events1, ...events2 } as any
+			events: mergedEvents as any
 		});
 	}
 }
