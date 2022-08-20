@@ -5,7 +5,7 @@
 		"**/*.ts"
 	],
 	"compilerOptions": {
-		"lib": ["es2015"],
+		"lib": ["dom", "es2021"],
 		"baseUrl": "./src",
 		"types": ["types.d.ts"]
 	}
