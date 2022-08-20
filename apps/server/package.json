@@ -10,7 +10,8 @@
 	"dependencies": {
 		"@package/common-utils": "workspace:*",
 		"@package/multiplayer": "workspace:*",
-		"@package/multiplayer-internal": "workspace:*"
+		"@package/multiplayer-internal": "workspace:*",
+		"zod": "^3.18.0"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^3.14.1",

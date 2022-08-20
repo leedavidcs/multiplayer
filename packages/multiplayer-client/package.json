@@ -6,7 +6,8 @@
 	"types": "src/index.ts",
 	"sideEffects": false,
 	"dependencies": {
-		"@package/common-utils": "workspace:*"
+		"@package/common-utils": "workspace:*",
+		"immer": "^9.0.15"
 	},
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",

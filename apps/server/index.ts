@@ -31,7 +31,6 @@ const router = createRouter<Env>()
 		return room.fetch(forwardUrl, request);
 	});
 
-
 const worker: ExportedHandler<Env> = {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		return router

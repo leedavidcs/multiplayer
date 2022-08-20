@@ -1,8 +1,10 @@
 import { ObjectUtils } from "@package/common-utils";
 import {
 	EventData,
+	EventMessage,
 	EventRecord,
-	InputZodLike
+	InputZodLike,
+	MultiplayerInternal
 } from "@package/multiplayer-internal";
 
 export interface EventConfig<TData extends EventData = {}> {
@@ -83,6 +85,33 @@ export class MultiplayerClient<
 			apiEndpoint: multiplayer1.apiEndpoint,
 			events: mergedEvents as any
 		});
+	}
+
+	public parseMessage(
+		message: MessageEvent<string>
+	): EventMessage<string, any> | null {
+		const rawMessage = MultiplayerInternal.parseMessage(message);
+
+		if (!rawMessage) return null;
+
+		const eventConfig = this.events[rawMessage.type] ?? null;
+
+		if (!eventConfig) return null;
+
+		const input = eventConfig.input?.parse(rawMessage.data) ??
+			/**
+			 * !HACK
+			 * @description Config doesn't specify validation. Just return {}
+			 * instead in the resolver.
+			 * @author David Lee
+			 * @date August 13, 2022
+			 */
+			{} as TInput[string];
+
+		return {
+			type: rawMessage.type,
+			data: input
+		};
 	}
 }
 

@@ -5,7 +5,8 @@ import {
 	EventMessage,
 	EventRecord,
 	InferEventMessage,
-	InputZodLike
+	InputZodLike,
+	MultiplayerInternal
 } from "@package/multiplayer-internal";
 
 interface WebSocketSession {
@@ -217,7 +218,7 @@ export class Multiplayer<
 				return;
 			}
 
-			const rawMessage = Multiplayer._parseMessage(message);
+			const rawMessage = MultiplayerInternal.parseMessage(message);
 
 			/**
 			 * !HACK
@@ -278,30 +279,6 @@ export class Multiplayer<
 
 		webSocket.addEventListener("close", closeHandler);
 		webSocket.addEventListener("error", closeHandler);
-	}
-
-	private static _parseMessage(
-		message: MessageEvent
-	): EventMessage<string, any> | null {
-		/**
-		 * !HACK
-		 * @description We'll only handle stringified JSONs for now
-		 * @author David Lee
-		 * @date August 9, 2022
-		 */
-		if (typeof message.data !== "string") return null;
-
-		try {
-			const config = JSON.parse(message.data);
-
-			if (typeof config !== "object") return null;
-			if (typeof config.type !== "string") return null;
-			if (typeof config.data !== "object") return null;
-
-			return config as EventMessage<string, any>;
-		} catch {
-			return null;
-		}
 	}
 
 	private static _sendMessage<
