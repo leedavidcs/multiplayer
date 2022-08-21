@@ -1,7 +1,8 @@
 export enum ConnectionState {
 	Closed = "Closed",
 	Connecting = "Connecting",
-	Open = "Open"
+	Open = "Open",
+	Unavailable = "Unavailable"
 }
 
 export interface Connection {

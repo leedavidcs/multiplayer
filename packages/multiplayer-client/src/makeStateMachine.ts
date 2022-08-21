@@ -1,6 +1,7 @@
 import { UrlUtils } from "@package/common-utils";
+import { EventMessage } from "@package/multiplayer-internal";
 import { produce } from "immer";
-import { Connection, ConnectionState, State } from "./getDefaultState";
+import { ConnectionState, State } from "./getDefaultState";
 
 const ROOM_NAME_MAX_LENGTH = 32;
 const ROOM_NAME_PATTERN = /^[0-9a-f]{64}$/;
@@ -9,13 +10,14 @@ export interface MakeStateMachineOptions {
 	apiEndpoint: string;
 	debug?: boolean;
 	onChange?: (state: State) => void;
-	parseMessage?: (message: MessageEvent<string>) => void;
+	onMessage?: (data: EventMessage<string, any>) => void;
+	parseMessage?: (message: MessageEvent<string>) => EventMessage<string, any> | null;
 }
 
 export interface StateMachine {
 	connect: () => Promise<void>;
-	disconnect: () => void | null;
-	reconnect: () => void | null;
+	disconnect: () => void;
+	reconnect: () => Promise<void>;
 }
 
 const normalizeRoomName = (roomName: string): string => {
@@ -34,17 +36,20 @@ const normalizeRoomName = (roomName: string): string => {
 export const makeStateMachine = (
 	initialState: State,
 	options: MakeStateMachineOptions
-) => {
-	const _options: MakeStateMachineOptions = {
+): StateMachine => {
+	const _options: NonNilProps<MakeStateMachineOptions> = {
+		debug: false,
+		onChange: () => undefined,
+		onMessage: () => undefined,
 		parseMessage: (message) => JSON.parse(message.data),
 		...options
 	};
 	let _state: State = initialState;
 
-	function updateState(updater: (oldState: State) => State): State {
+	function _updateState(updater: (oldState: State) => State): State {
 		_state = produce(_state, updater);
 
-		_options.onChange?.(_state);
+		_options.onChange(_state);
 
 		return _state;
 	}
@@ -56,10 +61,10 @@ export const makeStateMachine = (
 	 * @author David Lee
 	 * @date August 19, 2022
 	 */
-	function onClose(event: CloseEvent): void {
+	function _onClose(event: CloseEvent): void {
 		if (_options.debug) console.log(event.reason);
 
-		updateState((oldState) => {
+		_updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Closed;
 			oldState.webSocket = null;
 
@@ -73,16 +78,18 @@ export const makeStateMachine = (
 	 * @author David Lee
 	 * @date August 19, 2022
 	 */
-	function onError() {}
+	function _onError() {}
 
-	function onMessage(event: MessageEvent<string>) {
-		
+	function _onMessage(message: MessageEvent<string>): void {
+		const data = _options.parseMessage(message);
+
+		!!data && _options.onMessage(data);
 	}
 
-	function onOpen(): void {
+	function _onOpen(): void {
 		if (_state.connection.state !== ConnectionState.Connecting) return;
 
-		updateState((oldState) => {
+		_updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Open;
 
 			return oldState;
@@ -105,11 +112,12 @@ export const makeStateMachine = (
 			`${UrlUtils.preferWss(_options.apiEndpoint)}/api/room/${normalizedName}`
 		);
 
-		webSocket.addEventListener("close", onClose);
-		webSocket.addEventListener("error", onError);
-		webSocket.addEventListener("open", onOpen);
+		webSocket.addEventListener("close", _onClose);
+		webSocket.addEventListener("error", _onError);
+		webSocket.addEventListener("message", _onMessage);
+		webSocket.addEventListener("open", _onOpen);
 
-		updateState((oldState) => {
+		_updateState((oldState) => {
 			oldState.webSocket = webSocket;
 			oldState.connection.state = ConnectionState.Connecting;
 
@@ -117,11 +125,44 @@ export const makeStateMachine = (
 		});
 	}
 
-	async function disconnect(): Promise<void> {
+	function _closeWebSocket(): void {
+		if (!_state.webSocket) return;
 
+		_state.webSocket.removeEventListener("close", _onClose);
+		_state.webSocket.removeEventListener("error", _onError);
+		_state.webSocket.removeEventListener("message", _onMessage);
+		_state.webSocket.removeEventListener("open", _onOpen);
+
+		_state.webSocket.close();
+	}
+
+	function disconnect(): void {
+		_closeWebSocket();
+
+		_updateState((oldState) => {
+			oldState.webSocket = null;
+			oldState.connection.state = ConnectionState.Closed;
+
+			return oldState;
+		});
+	}
+
+	async function reconnect(): Promise<void> {
+		_closeWebSocket();
+
+		_updateState((oldState) => {
+			oldState.webSocket = null;
+			oldState.connection.state = ConnectionState.Unavailable;
+
+			return oldState;
+		});
+
+		await connect();
 	}
 
 	return {
-		connect
+		connect,
+		disconnect,
+		reconnect
 	};
 };

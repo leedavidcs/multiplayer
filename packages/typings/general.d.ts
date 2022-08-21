@@ -31,11 +31,11 @@ declare type DeepPartial<T> = {
 
 declare type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> };
 
-declare type OptionalProps<T extends Record<string, any>, K extends keyof T> =
+declare type OptionalProps<T extends Record<string, any>, K extends keyof T = keyof T> =
 	Omit<T, K> & Partial<Pick<T, K>>;
 
-declare type NonNilProps<T extends Record<string, any>, K extends keyof T> =
-	Omit<T, K> & { [P in K]: NonNullable<T[P]> };
+declare type NonNilProps<T extends Record<string, any>, K extends keyof T = keyof T> =
+	Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 
 declare type Json =
 	| string
