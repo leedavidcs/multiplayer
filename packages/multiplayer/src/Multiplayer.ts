@@ -7,7 +7,8 @@ import {
 	EventRecord,
 	InferEventMessage,
 	InputZodLike,
-	MultiplayerInternal
+	MultiplayerInternal,
+	MultiplayerLike
 } from "@package/multiplayer-internal";
 
 interface WebSocketSession {
@@ -66,7 +67,7 @@ export class Multiplayer<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
-> {
+> implements MultiplayerLike<TInput> {
 	/**
 	 * !HACK
 	 * @description This is only used for type inferences in a generic way

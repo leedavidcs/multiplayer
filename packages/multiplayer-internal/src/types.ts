@@ -54,7 +54,7 @@ export type InputZodLike<TData extends EventData> = {
 	parse: (data: unknown) => TData;
 }
 
-interface MultiplayerLike<TInput extends EventRecord<string, any> = {}> {
+export interface MultiplayerLike<TInput extends EventRecord<string, any> = {}> {
 	_def: {
 		input: TInput;
 	};

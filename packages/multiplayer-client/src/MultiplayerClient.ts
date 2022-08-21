@@ -4,7 +4,8 @@ import {
 	EventMessage,
 	EventRecord,
 	InputZodLike,
-	MultiplayerInternal
+	MultiplayerInternal,
+	MultiplayerLike
 } from "@package/multiplayer-internal";
 
 export interface EventConfig<TData extends EventData = {}> {
@@ -29,7 +30,17 @@ export interface MultiplayerClientOptions<
 export class MultiplayerClient<
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
-> {
+> implements MultiplayerLike<TInput> {
+	/**
+	 * !HACK
+	 * @description This is only used for type inferences in a generic way
+	 * @author David Lee
+	 * @date August 13, 2022
+	 */
+	 readonly _def: {
+		input: TInput;
+	} = {} as any;
+
 	public apiEndpoint: string;
 	public events: InferEventConfig<TInput>;
 
