@@ -79,13 +79,6 @@ export class Multiplayer<
 	} = {} as any;
 
 	private _config: MultiplayerConfigOptions<TEnv> | null = null;
-	private _internalEvents: InferEventConfig<TEnv, TOutput, DefaultClientEventRecord> = {
-		$PING: {
-			resolver: (data, { broadcast }) => {
-				broadcast({ type: "$PONG", data: {} });
-			}
-		}
-	};
 	private _sessions = new Map<string, WebSocketSession>();
 
 	public events: InferEventConfig<TEnv, TOutput, TInput>;
@@ -212,8 +205,39 @@ export class Multiplayer<
 			 */
 			if (!rawMessage) return;
 
-			await this._handleEventMessage(webSocket, rawMessage, this._internalEvents);
-			await this._handleEventMessage(webSocket, rawMessage, this.events);
+			const eventConfig = this.events[rawMessage.type] ?? null;
+
+			if (!eventConfig) return;
+	
+			let input: TInput[string]
+	
+			try {
+				input = eventConfig.input?.parse(rawMessage.data) ??
+					/**
+					 * !HACK
+					 * @description Config doesn't specify validation. Just return {}
+					 * instead in the resolver.
+					 * @author David Lee
+					 * @date August 13, 2022
+					 */
+					{} as TInput[string];
+			} catch(error) {
+				this._handleWsError(webSocket, error, "Invalid input");
+	
+				return;
+			}
+	
+			try {
+				await Promise.resolve(
+					eventConfig.resolver(input, {
+						broadcast: this.broadcast,
+						/* eslint-disable-next-line */
+						env: this._config!.env
+					})
+				);
+			} catch (error) {
+				this._handleWsError(webSocket, error);
+			}
 		});
 
 		const closeHandler = () => {
@@ -231,46 +255,6 @@ export class Multiplayer<
 
 		webSocket.addEventListener("close", closeHandler);
 		webSocket.addEventListener("error", closeHandler);
-	}
-
-	private async _handleEventMessage(
-		webSocket: WebSocket,
-		message: EventMessage<string, any>,
-		events: InferEventConfig<TEnv, TOutput, EventRecord<string, any>>
-	): Promise<void> {
-		const eventConfig = events[message.type] ?? null;
-
-		if (!eventConfig) return;
-
-		let input: TInput[string]
-
-		try {
-			input = eventConfig.input?.parse(message.data) ??
-				/**
-				 * !HACK
-				 * @description Config doesn't specify validation. Just return {}
-				 * instead in the resolver.
-				 * @author David Lee
-				 * @date August 13, 2022
-				 */
-				{} as TInput[string];
-		} catch(error) {
-			this._handleWsError(webSocket, error, "Invalid input");
-
-			return;
-		}
-
-		try {
-			await Promise.resolve(
-				eventConfig.resolver(input, {
-					broadcast: this.broadcast,
-					/* eslint-disable-next-line */
-					env: this._config!.env
-				})
-			);
-		} catch (error) {
-			this._handleWsError(webSocket, error);
-		}
 	}
 
 	private _handleWsError(
@@ -310,5 +294,13 @@ export const createMultiplayer = <
 	TEnv = {},
 	TOutput extends EventRecord<string, any> = {}
 >(): Multiplayer<TEnv, TOutput, DefaultClientEventRecord> => {
-	return new Multiplayer<TEnv, TOutput, DefaultClientEventRecord>();
+	return new Multiplayer<TEnv, TOutput, DefaultClientEventRecord>({
+		events: {
+			$PING: {
+				resolver: (data, { broadcast }) => {
+					broadcast({ type: "$PONG", data: {} });
+				}
+			}
+		}
+	});
 };
