@@ -1,6 +1,7 @@
 import { ObjectUtils } from "@package/common-utils";
 import {
-	DefaultOutputMessage,
+	DefaultClientEventRecord,
+	DefaultServerMessage,
 	EventData,
 	EventMessage,
 	EventRecord,
@@ -19,7 +20,7 @@ interface EventResolverHelpers<
 	TEnv,
 	TOutput extends EventRecord<string, any> = {}
 > {
-	broadcast: (message: InferEventMessage<TOutput>) => void;
+	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => void;
 	env: TEnv;
 }
 
@@ -87,7 +88,7 @@ export class Multiplayer<
 	}
 
 	public broadcast(
-		message: InferEventMessage<TOutput> | DefaultOutputMessage
+		message: InferEventMessage<TOutput> | DefaultServerMessage
 	): void {
 		const quitters: WebSocketSession[] = [];
 
@@ -291,6 +292,11 @@ export class Multiplayer<
 export const createMultiplayer = <
 	TEnv = {},
 	TOutput extends EventRecord<string, any> = {}
->(): Multiplayer<TEnv, TOutput, {}> => {
-	return new Multiplayer<TEnv, TOutput, {}>();
+>(): Multiplayer<TEnv, TOutput, DefaultClientEventRecord> => {
+	return new Multiplayer<TEnv, TOutput, {}>()
+		.event("$PING", {
+			resolver: (data, { broadcast }) => {
+				broadcast({ type: "$PONG", data: {} })
+			}
+		});
 };

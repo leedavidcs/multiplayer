@@ -1,4 +1,12 @@
-interface DefaultServerEventRecord {
+export interface DefaultClientEventRecord {
+	$PING: {}
+}
+
+export type DefaultClientMessage = InferEventMessage<
+	DefaultClientEventRecord
+>;
+
+export interface DefaultServerEventRecord {
 	$ERROR: {
 		message: string;
 		stack?: string | null;
@@ -6,9 +14,10 @@ interface DefaultServerEventRecord {
 	$EXIT: {
 		sessionId: string;
 	};
+	$PONG: {}
 }
 
-export type DefaultOutputMessage = InferEventMessage<
+export type DefaultServerMessage = InferEventMessage<
 	DefaultServerEventRecord
 >;
 
@@ -16,7 +25,7 @@ export type EventData = Record<string, Json>;
 
 export interface EventMessage<
 	TEvent extends string,
-	TData extends EventData
+	TData extends EventData = {}
 > {
 	data: TData;
 	type: TEvent;
@@ -45,7 +54,7 @@ export type InputZodLike<TData extends EventData> = {
 	parse: (data: unknown) => TData;
 }
 
-interface MultiplayerLike<TInput extends EventRecord<string, any>> {
+interface MultiplayerLike<TInput extends EventRecord<string, any> = {}> {
 	_def: {
 		input: TInput;
 	};
