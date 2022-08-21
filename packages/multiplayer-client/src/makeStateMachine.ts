@@ -1,8 +1,9 @@
-import { UrlUtils } from "@package/common-utils";
+import { ms, UrlUtils } from "@package/common-utils";
 import { EventMessage } from "@package/multiplayer-internal";
 import { produce } from "immer";
 import { ConnectionState, State } from "./getDefaultState";
 
+const HEARTBEAT_INTERVAL = ms("30s");
 const ROOM_NAME_MAX_LENGTH = 32;
 const ROOM_NAME_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -52,6 +53,26 @@ export const makeStateMachine = (
 		_options.onChange(_state);
 
 		return _state;
+	}
+
+	/**
+	 * TODO
+	 * @description Actually set-up an interval to trigger the heartbeat on
+	 * @author David Lee
+	 * @date August 20, 2022
+	 */
+	function _heartbeat() {
+		if (!_state.webSocket) return;
+		if (_state.webSocket.readyState !== _state.webSocket.OPEN) return;
+
+		/**
+		 * TODO
+		 * @description Create a helper to use server event message types, handles
+		 * input validation, parsing, and errors
+		 * @author David Lee
+		 * @date August 20, 2022
+		 */
+		_state.webSocket.send(JSON.stringify({ type: "$PING", data: {} }));
 	}
 	
 	/**
