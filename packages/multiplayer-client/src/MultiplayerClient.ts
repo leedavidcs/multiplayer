@@ -3,10 +3,12 @@ import {
 	EventData,
 	EventMessage,
 	EventRecord,
+	InferEventMessage,
 	InputZodLike,
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
+import { WebSocketManager } from "WebSocketManager";
 
 export interface EventConfig<TData extends EventData = {}> {
 	input?: InputZodLike<TData>;
@@ -24,7 +26,8 @@ export interface MultiplayerClientOptions<
 	TEvents extends EventRecord<string, any> = {}
 > {
 	apiEndpoint: string;
-	events?: InferEventConfig<TEvents>
+	debug?: boolean;
+	events?: InferEventConfig<TEvents>;
 }
 
 export class MultiplayerClient<
@@ -37,16 +40,47 @@ export class MultiplayerClient<
 	 * @author David Lee
 	 * @date August 13, 2022
 	 */
-	 readonly _def: {
+	readonly _def: {
 		input: TInput;
 	} = {} as any;
 
 	public apiEndpoint: string;
 	public events: InferEventConfig<TInput>;
 
+	private _webSocket: WebSocketManager<TOutput>;
+
 	constructor(options: MultiplayerClientOptions<TInput>) {
 		this.apiEndpoint = options.apiEndpoint;
 		this.events = options.events ?? {} as InferEventConfig<TInput>;
+
+		this._webSocket = new WebSocketManager<TOutput>({
+			apiEndpoint: this.apiEndpoint,
+			debug: options.debug,
+			onMessage: (message) => {
+				const rawMessage = this._parseMessage(message);
+
+				if (!rawMessage) return;
+
+				/**
+				 * TODO
+				 * @description Add message handler
+				 * @author David Lee
+				 * @date August 21, 2022
+				 */
+			}
+		});
+	}
+
+	public broadcast(message: InferEventMessage<TOutput>): void {
+		return this._webSocket.broadcast(message);
+	}
+
+	public connect(): Promise<void> {
+		return this._webSocket.connect();
+	}
+
+	public disconnect(): void {
+		return this._webSocket.disconnect();
 	}
 
 	public event<
@@ -98,7 +132,11 @@ export class MultiplayerClient<
 		});
 	}
 
-	public parseMessage(
+	public reconnect(): Promise<void> {
+		return this._webSocket.reconnect();
+	}
+
+	private _parseMessage(
 		message: MessageEvent<string>
 	): EventMessage<string, any> | null {
 		const rawMessage = MultiplayerInternal.parseMessage(message);
