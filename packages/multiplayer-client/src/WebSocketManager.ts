@@ -1,4 +1,5 @@
-import { LangUtils, ms, UrlUtils } from "@package/common-utils";
+import { ms, UrlUtils } from "@package/common-utils";
+import { EventMessage, EventRecord } from "@package/multiplayer-internal";
 import { produce } from "immer";
 
 const HEARTBEAT_INTERVAL = ms("30s");
@@ -45,7 +46,9 @@ export interface WebSocketManagerConfig {
 }
 
 
-export class WebSocketManager {
+export class WebSocketManager<
+	TInput extends EventRecord<string, any> = {}
+> {
 	private _config: WebSocketManagerConfig;
 	private _intervals: IntervalIds = {
 		heartbeat: null
@@ -173,14 +176,10 @@ export class WebSocketManager {
 		clearTimeout(this._timeouts.pong ?? undefined);
 		this._timeouts.pong = setTimeout(this.reconnect.bind(this), PONG_TIMEOUT);
 
-		/**
-		 * TODO
-		 * @description Create a helper to use server event message types, and handles
-		 * input validation, parsing and errors
-		 * @author David Lee
-		 * @date August 20, 2022
-		 */
-		this._state.webSocket.send(JSON.stringify({ type: "$PING", data: {} }));
+		WebSocketManager._sendMessage(this._state.webSocket, {
+			type: "$PING",
+			data: {}
+		});
 	}
 
 	private _normalizeRoomName(roomName: string): string {
@@ -240,6 +239,12 @@ export class WebSocketManager {
 
 		clearInterval(this._intervals.heartbeat ?? undefined);
 		this._intervals.heartbeat = setInterval(this._heartbeat.bind(this), HEARTBEAT_INTERVAL);
+	}
+
+	private static _sendMessage<
+		TMessage extends EventMessage<string, any> = EventMessage<string, any>
+	>(webSocket: WebSocket, data: TMessage): void {
+		webSocket.send(JSON.stringify(data));
 	}
 
 	private _updateState(updater: (oldState: WebSocketState) => void): WebSocketState {
