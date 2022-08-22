@@ -1,7 +1,8 @@
-import { ms, UrlUtils } from "@package/common-utils";
+import { LangUtils, ms, UrlUtils } from "@package/common-utils";
 import { produce } from "immer";
 
 const HEARTBEAT_INTERVAL = ms("30s");
+const PONG_TIMEOUT = ms("2s");
 const ROOM_NAME_MAX_LENGTH = 32;
 const ROOM_NAME_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -10,6 +11,14 @@ interface WebSocketListeners {
 	onError: () => void;
 	onMessage: (message: MessageEvent<string>) => void;
 	onOpen: () => void;
+}
+
+interface IntervalIds {
+	heartbeat: number | null;
+}
+
+interface TimeoutIds {
+	pong: number | null;
 }
 
 export enum ConnectionState {
@@ -38,11 +47,17 @@ export interface WebSocketManagerConfig {
 
 export class WebSocketManager {
 	private _config: WebSocketManagerConfig;
+	private _intervals: IntervalIds = {
+		heartbeat: null
+	};
 	private _state: WebSocketState = {
 		connection: {
 			state: ConnectionState.Closed
 		},
 		webSocket: null
+	};
+	private _timeouts: TimeoutIds = {
+		pong: null
 	};
 	private _wsListeners: WebSocketListeners | null = null;
 
@@ -133,6 +148,10 @@ export class WebSocketManager {
 		if (!this._state.webSocket) return;
 
 		this._detachWsListeners();
+
+		clearInterval(this._intervals.heartbeat ?? undefined);
+		clearTimeout(this._timeouts.pong ?? undefined);
+
 		this._state.webSocket.close();
 	}
 
@@ -147,15 +166,12 @@ export class WebSocketManager {
 		this._wsListeners = null;
 	}
 
-	/**
-	 * TODO
-	 * @description Actually set-up the interval to trigger the heartbeat on
-	 * @author David Lee
-	 * @date August 20, 2022
-	 */
 	private _heartbeat(): void {
 		if (!this._state.webSocket) return;
 		if (this._state.webSocket.readyState !== this._state.webSocket.OPEN) return;
+
+		clearTimeout(this._timeouts.pong ?? undefined);
+		this._timeouts.pong = setTimeout(this.reconnect.bind(this), PONG_TIMEOUT);
 
 		/**
 		 * TODO
@@ -190,6 +206,9 @@ export class WebSocketManager {
 	private _onClose(event: CloseEvent): void {
 		if (this._config.debug) console.log(event.reason);
 
+		clearInterval(this._intervals.heartbeat ?? undefined);
+		clearTimeout(this._timeouts.pong ?? undefined);
+
 		this._updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Closed;
 			oldState.webSocket = null;
@@ -218,6 +237,9 @@ export class WebSocketManager {
 		
 			return oldState;
 		});
+
+		clearInterval(this._intervals.heartbeat ?? undefined);
+		this._intervals.heartbeat = setInterval(this._heartbeat.bind(this), HEARTBEAT_INTERVAL);
 	}
 
 	private _updateState(updater: (oldState: WebSocketState) => void): WebSocketState {
