@@ -36,6 +36,13 @@ export type EventRecord<
 	TData extends EventData
 > = { [key in `${TEvent}`]: TData };
 
+export type GetEventMessage<
+	T extends EventRecord<string, any>,
+	TEvent extends keyof T
+> = TEvent extends string
+	? EventMessage<TEvent, T[TEvent]>
+	: never;
+
 export type Infer<TMultiplayer extends MultiplayerLike<any>> =
 	TMultiplayer extends MultiplayerLike<infer TInput>
 		? TInput
