@@ -7,6 +7,7 @@
 	"compilerOptions": {
 		"lib": ["dom", "es2021"],
 		"baseUrl": "./src",
+		"target": "es5",
 		"types": ["types.d.ts"]
 	}
 }

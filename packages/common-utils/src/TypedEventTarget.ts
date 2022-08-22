@@ -1,6 +1,12 @@
-export type TypedEvent<T = unknown> = Event & {
-	data?: T;
-};
+export class TypedEvent<T = unknown> extends CustomEvent<T> {
+	constructor(type: string, data: T) {
+		super(type, { detail: data });
+	}
+
+	public get data(): T {
+		return this.detail;
+	}
+}
 
 export interface TypedEventListener<TEvent extends TypedEvent> extends EventListener {
 	(event: TEvent): void
@@ -13,20 +19,20 @@ export interface TypedEventListenerObject<TEvent extends TypedEvent> extends Eve
 export type TypedEventListenerOrEventListenerObject<TEvent extends TypedEvent> =
 	TypedEventListener<TEvent> | TypedEventListenerObject<TEvent>;
 
-export type TypedEventMap = Record<string, TypedEvent>;
+export type TypedEventMap = Record<string, any>;
 
 export interface TypedEventTarget<TEventMap extends TypedEventMap> extends EventTarget {
 	addEventListener<TName extends keyof TEventMap>(
 		type: TName,
-		callback: TypedEventListenerOrEventListenerObject<TEventMap[TName]>,
+		callback: TypedEventListenerOrEventListenerObject<TypedEvent<TEventMap[TName]>>,
 		options?: AddEventListenerOptions | boolean
 	): void;
 
-	dispatchEvent(event: TEventMap[keyof TEventMap]): boolean;
+	dispatchEvent(event: TypedEvent<TEventMap[keyof TEventMap]>): boolean;
 
 	removeEventListener<TName extends keyof TEventMap>(
 		type: TName,
-		callback: TypedEventListenerOrEventListenerObject<TEventMap[TName]>,
+		callback: TypedEventListenerOrEventListenerObject<TypedEvent<TEventMap[TName]>>,
 		options?: EventListenerOptions | boolean
 	): void;
 }
