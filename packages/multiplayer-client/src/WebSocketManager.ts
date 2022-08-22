@@ -1,5 +1,5 @@
 import { ms, UrlUtils } from "@package/common-utils";
-import { EventMessage, EventRecord } from "@package/multiplayer-internal";
+import { EventMessage, EventRecord, InferEventMessage } from "@package/multiplayer-internal";
 import { produce } from "immer";
 
 const HEARTBEAT_INTERVAL = ms("30s");
@@ -47,7 +47,7 @@ export interface WebSocketManagerConfig {
 
 
 export class WebSocketManager<
-	TInput extends EventRecord<string, any> = {}
+	TOutput extends EventRecord<string, any> = {}
 > {
 	private _config: WebSocketManagerConfig;
 	private _intervals: IntervalIds = {
@@ -75,6 +75,13 @@ export class WebSocketManager<
 
 	public get webSocket(): WebSocket | null {
 		return this._state.webSocket;
+	}
+
+	public broadcast(message: InferEventMessage<TOutput>): void {
+		if (!this._state.webSocket) return;
+		if (this._state.connection.state !== ConnectionState.Open) return;
+
+		WebSocketManager._sendMessage(this._state.webSocket, message);
 	}
 
 	public async connect(): Promise<void> {
