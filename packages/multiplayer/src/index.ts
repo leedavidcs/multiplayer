@@ -1,5 +1,4 @@
 export type {
-	DefaultOutputMessage,
 	EventData,
 	EventMessage,
 	EventRecord,
