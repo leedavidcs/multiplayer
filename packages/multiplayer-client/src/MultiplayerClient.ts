@@ -1,13 +1,13 @@
-import { ObjectUtils } from "@package/common-utils";
+import { ObjectUtils, TypedEvent } from "@package/common-utils";
 import {
 	EventData,
-	EventMessage,
 	EventRecord,
 	InferEventMessage,
 	InputZodLike,
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
+import { MultiplayerEventTarget } from "MultiplayerEventTarget";
 import { WebSocketManager } from "WebSocketManager";
 
 export interface EventConfig<TData extends EventData = {}> {
@@ -33,7 +33,7 @@ export interface MultiplayerClientOptions<
 export class MultiplayerClient<
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
-> implements MultiplayerLike<TInput> {
+> extends MultiplayerEventTarget<TInput> implements MultiplayerLike<TInput> {
 	/**
 	 * !HACK
 	 * @description This is only used for type inferences in a generic way
@@ -50,6 +50,8 @@ export class MultiplayerClient<
 	private _webSocket: WebSocketManager<TOutput>;
 
 	constructor(options: MultiplayerClientOptions<TInput>) {
+		super();
+
 		this.apiEndpoint = options.apiEndpoint;
 		this.events = options.events ?? {} as InferEventConfig<TInput>;
 
@@ -61,12 +63,7 @@ export class MultiplayerClient<
 
 				if (!rawMessage) return;
 
-				/**
-				 * TODO
-				 * @description Add message handler
-				 * @author David Lee
-				 * @date August 21, 2022
-				 */
+				this.dispatchEvent(new TypedEvent(rawMessage.type, rawMessage));
 			}
 		});
 	}
@@ -138,7 +135,7 @@ export class MultiplayerClient<
 
 	private _parseMessage(
 		message: MessageEvent<string>
-	): EventMessage<string, any> | null {
+	): InferEventMessage<TInput> | null {
 		const rawMessage = MultiplayerInternal.parseMessage(message);
 
 		if (!rawMessage) return null;
@@ -160,7 +157,7 @@ export class MultiplayerClient<
 		return {
 			type: rawMessage.type,
 			data: input
-		};
+		} as InferEventMessage<TInput>;
 	}
 }
 
