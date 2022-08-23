@@ -1,5 +1,6 @@
-import { createRouter, RequestUtils, WebSocketUtils } from "@package/wrangler-utils";
+import { createRouter, RateLimiterClient, RequestUtils, WebSocketUtils } from "@package/wrangler-utils";
 import { createMultiplayer } from "@package/multiplayer";
+import { ms } from "@package/common-utils";
 
 interface Context {
 	env: Env;
@@ -18,15 +19,23 @@ const router = createRouter<Env>()
 
 		const requestIp: string = RequestUtils.getRequestIp(request);
 		const limiterId = env.limiters.idFromName(requestIp);
+		const limiter = new RateLimiterClient({
+			duration: ms("1m"),
+			getLimiterStub: () => env.limiters.get(limiterId),
+			maxRequests: 1_000
+		})
 
-		/**
-		 * TODO
-		 * @description Connect limiter to multiplayer message event
-		 * @author David Lee
-		 * @date August 18, 2022
-		 */
+		multiplayer.register(server, {
+			middleware: () => {
+				const limit = limiter.checkLimit();
 
-		multiplayer.register(server);
+				if (limit.remaining > 0) return;
+
+				throw new Error(
+					"Your IP is being rate-limited. Please try again later."
+				);
+			}
+		});
 
 		return new Response(null, { status: 101, webSocket: client });
 	});
