@@ -97,7 +97,7 @@ export class WebSocketManager<
 		const normalizedName = this._normalizeRoomName(roomName);
 
 		const webSocket = new WebSocket(
-			`${UrlUtils.preferWss(this._config.apiEndpoint)}/api/room/${normalizedName}`
+			`${UrlUtils.preferWss(this._config.apiEndpoint)}/api/room/${normalizedName}/websocket`
 		);
 
 		this._updateState((oldState) => {
