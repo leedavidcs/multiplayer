@@ -198,7 +198,14 @@ export class Multiplayer<
 			webSocket
 		};
 
-		this._sessions.set(session.id, session)
+		this._sessions.set(session.id, session);
+
+		const helpers: EventResolverHelpers<TContext, TOutput> = {
+			broadcast: this.broadcast,
+			/* eslint-disable-next-line */
+			context: this._config!.context,
+			session
+		};
 
 		webSocket.addEventListener("message", async (message) => {
 			// Should not reach here. But handling it just in-case.
@@ -209,14 +216,7 @@ export class Multiplayer<
 			}
 
 			try {
-				await Promise.resolve(
-					options?.middleware?.({
-						broadcast: this.broadcast,
-						/* eslint-disable-next-line */
-						context: this._config!.context,
-						session
-					})
-				);
+				await Promise.resolve(options?.middleware?.(helpers));
 			} catch (error) {
 				this._handleWsError(webSocket, error);
 	
@@ -257,14 +257,7 @@ export class Multiplayer<
 			}
 	
 			try {
-				await Promise.resolve(
-					eventConfig.resolver(input, {
-						broadcast: this.broadcast,
-						/* eslint-disable-next-line */
-						context: this._config!.context,
-						session
-					})
-				);
+				await Promise.resolve(eventConfig.resolver(input, helpers));
 			} catch (error) {
 				this._handleWsError(webSocket, error);
 			}
