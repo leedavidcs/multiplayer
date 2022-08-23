@@ -1,7 +1,12 @@
 import { createRouter, RequestUtils, WebSocketUtils } from "@package/wrangler-utils";
 import { createMultiplayer } from "@package/multiplayer";
 
-const multiplayer = createMultiplayer<Env, {}>();
+interface Context {
+	env: Env;
+	storage: DurableObjectStorage;
+}
+
+const multiplayer = createMultiplayer<Context, {}>();
 
 const router = createRouter<Env>()
 	.path("/websocket", (__, { env, request }) => {
@@ -32,8 +37,10 @@ export class RoomDurableObject implements DurableObject {
 
 	constructor(state: DurableObjectState, env: Env) {
 		this._multiplayer.config({
-			env,
-			storage: state.storage
+			context: {
+				env,
+				storage: state.storage
+			}
 		});
 
 		this._router.config({ env });

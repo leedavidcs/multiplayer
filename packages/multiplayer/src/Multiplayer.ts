@@ -18,53 +18,54 @@ interface WebSocketSession {
 }
 
 interface EventResolverHelpers<
-	TEnv,
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
 > {
 	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => void;
-	env: TEnv;
+	context: TContext;
 }
 
 export type EventResolver<
-	TEnv,
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TData extends EventData = {}
-> = (data: TData, helpers: EventResolverHelpers<TEnv, TOutput>) => void;
+> = (data: TData, helpers: EventResolverHelpers<TContext, TOutput>) => void;
 
 export interface EventConfig<
-	TEnv,
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TData extends EventData = {}
 > {
 	input?: InputZodLike<TData>;
-	resolver: EventResolver<TEnv, TOutput, TData>;
+	resolver: EventResolver<TContext, TOutput, TData>;
 }
 
 type InferEventConfig<
-	TEnv,
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TEvents extends EventRecord<string, any> = {}
 > = {
 	[P in keyof TEvents]: P extends string
-		? Id<EventConfig<TEnv, TOutput, TEvents[P]>>
+		? Id<EventConfig<TContext, TOutput, TEvents[P]>>
 		: never;
 };
 
-export interface MultiplayerConfigOptions<TEnv> {
-	env: TEnv;
-	storage: DurableObjectStorage;
+export interface MultiplayerConfigOptions<
+	TContext extends Record<string, any> = {}
+> {
+	context: TContext;
 };
 
 export interface MultiplayerOptions<
-	TEnv,
-	TOutput extends EventRecord<string, any>,
-	TInput extends EventRecord<string, any>
+	TContext extends Record<string, any> = {},
+	TOutput extends EventRecord<string, any> = {},
+	TInput extends EventRecord<string, any> = {}
 > {
-	events?: InferEventConfig<TEnv, TOutput, TInput>;
+	events?: InferEventConfig<TContext, TOutput, TInput>;
 }
 
 export class Multiplayer<
-	TEnv,
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
 > implements MultiplayerLike<TInput> {
@@ -78,14 +79,14 @@ export class Multiplayer<
 		input: TInput;
 	} = {} as any;
 
-	private _config: MultiplayerConfigOptions<TEnv> | null = null;
+	private _config: MultiplayerConfigOptions<TContext> | null = null;
 	private _sessions = new Map<string, WebSocketSession>();
 
-	public events: InferEventConfig<TEnv, TOutput, TInput>;
+	public events: InferEventConfig<TContext, TOutput, TInput>;
 
-	constructor(options: MultiplayerOptions<TEnv, TOutput, TInput> = {}) {
+	constructor(options: MultiplayerOptions<TContext, TOutput, TInput> = {}) {
 		this.events = options.events
-			?? {} as InferEventConfig<TEnv, TOutput, TInput>;
+			?? {} as InferEventConfig<TContext, TOutput, TInput>;
 	}
 
 	public broadcast(
@@ -116,8 +117,8 @@ export class Multiplayer<
 	}
 
 	public config(
-		options: MultiplayerConfigOptions<TEnv>
-	): Multiplayer<TEnv, TOutput, TInput> {
+		options: MultiplayerConfigOptions<TContext>
+	): Multiplayer<TContext, TOutput, TInput> {
 		if (this._config) {
 			throw new Error("Multiplayer has already been configured.");
 		}
@@ -132,9 +133,9 @@ export class Multiplayer<
 		TData extends EventData = {}
 	>(
 		event: TEvent,
-		config: EventConfig<TEnv, TOutput, TData>
+		config: EventConfig<TContext, TOutput, TData>
 	): Multiplayer<
-		TEnv,
+		TContext,
 		TOutput,
 		Spread<[
 			TInput,
@@ -147,20 +148,20 @@ export class Multiplayer<
 
 		const newEvent = {
 			[event]: config
-		} as InferEventConfig<TEnv, TOutput, EventRecord<TEvent, TData>>;
+		} as InferEventConfig<TContext, TOutput, EventRecord<TEvent, TData>>;
 
 		return Multiplayer.merge(this, new Multiplayer({ events: newEvent }));
 	}
 
 	public static merge<
-		TEnvStatic,
-		TOutputStatic extends EventRecord<string, any>,
-		TInputStatic1 extends EventRecord<string, any>,
-		TInputStatic2 extends EventRecord<string, any>
+		TContextStatic extends Record<string, any> = {},
+		TOutputStatic extends EventRecord<string, any> = {},
+		TInputStatic1 extends EventRecord<string, any> = {},
+		TInputStatic2 extends EventRecord<string, any> = {}
 	>(
-		multiplayer1: Multiplayer<TEnvStatic, TOutputStatic, TInputStatic1>,
-		multiplayer2: Multiplayer<TEnvStatic, TOutputStatic, TInputStatic2>
-	): Multiplayer<TEnvStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
+		multiplayer1: Multiplayer<TContextStatic, TOutputStatic, TInputStatic1>,
+		multiplayer2: Multiplayer<TContextStatic, TOutputStatic, TInputStatic2>
+	): Multiplayer<TContextStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
 		const events1 = multiplayer1.events;
 		const events2 = multiplayer2.events;
 
@@ -232,7 +233,7 @@ export class Multiplayer<
 					eventConfig.resolver(input, {
 						broadcast: this.broadcast,
 						/* eslint-disable-next-line */
-						env: this._config!.env
+						context: this._config!.context
 					})
 				);
 			} catch (error) {
@@ -291,10 +292,10 @@ export class Multiplayer<
 }
 
 export const createMultiplayer = <
-	TEnv = {},
+	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
->(): Multiplayer<TEnv, TOutput, DefaultClientEventRecord> => {
-	return new Multiplayer<TEnv, TOutput, DefaultClientEventRecord>({
+>(): Multiplayer<TContext, TOutput, DefaultClientEventRecord> => {
+	return new Multiplayer<TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
 				resolver: (data, { broadcast }) => {
