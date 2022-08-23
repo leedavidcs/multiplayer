@@ -9,12 +9,15 @@ export interface RateLimiterClientConfig {
 	 */
 	getLimiterStub: () => DurableObjectStub;
 	maxRequests: number;
+}
+
+export interface CheckErrorOptions {
 	/**
 	 * @description This is called when something goes wrong and the rate
 	 * limiter is broken. It should probably disconnect the client, so that
 	 * they can reconnect and start over.
 	 */
-	reportError?: (error: Error) => void;
+	onError?: (error: Error) => void;
 }
 
 export class RateLimiterClient {
@@ -29,10 +32,12 @@ export class RateLimiterClient {
 		this._limiter = this._config.getLimiterStub();
 	}
 
-	public checkLimit(): RateLimiterCheckLimitResult {
+	public checkLimit(
+		options?: CheckErrorOptions
+	): RateLimiterCheckLimitResult {
 		if (this._state) return this._state;
 
-		this._callLimiter();
+		this._callLimiter(options);
 
 		return RateLimiter.getDefaultState({
 			duration: this._config.duration,
@@ -40,7 +45,7 @@ export class RateLimiterClient {
 		});
 	}
 
-	private async _callLimiter(): Promise<void> {
+	private async _callLimiter(options?: CheckErrorOptions): Promise<void> {
 		try {
 			let response: RateLimiterCheckLimitResult;
 
@@ -70,12 +75,12 @@ export class RateLimiterClient {
 			this._state = response;
 		} catch (error) {
 			if (error instanceof Error) {
-				this._config.reportError?.(error);
+				options?.onError?.(error);
 				
 				return;
 			}
 			
-			this._config.reportError?.(new Error("Unexpected rate limiter error"));
+			options?.onError?.(new Error("Unexpected rate limiter error"));
 		}
 	}
 }
