@@ -23,6 +23,7 @@ interface EventResolverHelpers<
 > {
 	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => void;
 	context: TContext;
+	session: WebSocketSession;
 }
 
 export type EventResolver<
@@ -55,6 +56,15 @@ export interface MultiplayerConfigOptions<
 > {
 	context: TContext;
 };
+
+export interface MultiplayerRegisterOptions<
+	TContext extends Record<string, any> = {},
+	TOutput extends EventRecord<string, any> = {}
+> {
+	middleware?: (
+		helpers: EventResolverHelpers<TContext, TOutput>
+	) => MaybePromise<void>;
+}
 
 export interface MultiplayerOptions<
 	TContext extends Record<string, any> = {},
@@ -170,7 +180,10 @@ export class Multiplayer<
 		return new Multiplayer({ events: mergedEvents as any });
 	}
 
-	public register(webSocket: WebSocket): void {
+	public register(
+		webSocket: WebSocket,
+		options?: MultiplayerRegisterOptions<TContext, TOutput>
+	): void {
 		if (!this._config) {
 			throw new Error(
 				"Must call \"config\" before registering a new WebSocket."
@@ -192,6 +205,21 @@ export class Multiplayer<
 			if (session.quit) {
 				webSocket.close(1011, "WebSocket broken");
 
+				return;
+			}
+
+			try {
+				await Promise.resolve(
+					options?.middleware?.({
+						broadcast: this.broadcast,
+						/* eslint-disable-next-line */
+						context: this._config!.context,
+						session
+					})
+				);
+			} catch (error) {
+				this._handleWsError(webSocket, error);
+	
 				return;
 			}
 
@@ -233,7 +261,8 @@ export class Multiplayer<
 					eventConfig.resolver(input, {
 						broadcast: this.broadcast,
 						/* eslint-disable-next-line */
-						context: this._config!.context
+						context: this._config!.context,
+						session
 					})
 				);
 			} catch (error) {
