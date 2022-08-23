@@ -31,14 +31,22 @@ const router = createRouter<Env>()
 		})
 
 		multiplayer.register(server, {
-			middleware: () => {
-				const limit = limiter.checkLimit();
+			middleware: ({ session }, next) => {
+				const [limit, error] = limiter.checkLimit();
 
-				if (limit.remaining > 0) return;
+				if (error) {
+					session.webSocket.close(1011, error.stack);
 
-				throw new Error(
-					"Your IP is being rate-limited. Please try again later."
-				);
+					return;
+				}
+
+				if (limit.remaining <= 0) {
+					throw new Error(
+						"Your IP is being rate-limited. Please try again later."
+					);
+				};
+
+				next();
 			}
 		});
 

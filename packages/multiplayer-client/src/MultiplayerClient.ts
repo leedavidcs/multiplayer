@@ -7,8 +7,8 @@ import {
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
-import { MultiplayerEventTarget } from "MultiplayerEventTarget";
-import { WebSocketManager } from "WebSocketManager";
+import { MultiplayerEventTarget } from "./MultiplayerEventTarget";
+import { WebSocketManager } from "./WebSocketManager";
 
 export interface EventConfig<TData extends EventData = {}> {
 	input?: InputZodLike<TData>;

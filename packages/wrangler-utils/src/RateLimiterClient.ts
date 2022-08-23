@@ -1,4 +1,4 @@
-import { RateLimiter, RateLimiterCheckLimitResult } from "RateLimiter";
+import { RateLimiter, RateLimiterCheckLimitResult } from "./RateLimiter";
 
 export interface RateLimiterClientConfig {
 	duration: number;
@@ -11,12 +11,12 @@ export interface RateLimiterClientConfig {
 	maxRequests: number;
 }
 
+export type RateLimiterClientCheckLimitResult =
+	| [result: RateLimiterCheckLimitResult, error: null]
+	| [result: null, error: Error];
+
 export interface CheckErrorOptions {
-	/**
-	 * @description This is called when something goes wrong and the rate
-	 * limiter is broken. It should probably disconnect the client, so that
-	 * they can reconnect and start over.
-	 */
+
 	onError?: (error: Error) => void;
 }
 
@@ -32,55 +32,59 @@ export class RateLimiterClient {
 		this._limiter = this._config.getLimiterStub();
 	}
 
-	public checkLimit(
-		options?: CheckErrorOptions
-	): RateLimiterCheckLimitResult {
-		if (this._state) return this._state;
+	public checkLimit(): RateLimiterClientCheckLimitResult {
+		if (this._state) return [this._state, null];
 
-		this._callLimiter(options);
+		try {
+			this._callLimiter();
+		} catch (error) {
+			/**
+			 * @description This is when something goes wrong and the rate
+			 * limiter is broken. It should probably disconnect the client, so
+			 * that they can reconnect and start over.
+			 */
+			if (error instanceof Error) {
+				return [null, error];
+			}
 
-		return RateLimiter.getDefaultState({
-			duration: this._config.duration,
-			maxRequests: this._config.maxRequests
-		});
+			return [null, new Error("Unexpected rate limiter error")];
+		}
+
+		return [
+			RateLimiter.getDefaultState({
+				duration: this._config.duration,
+				maxRequests: this._config.maxRequests
+			}),
+			null
+		];
 	}
 
-	private async _callLimiter(options?: CheckErrorOptions): Promise<void> {
+	private async _callLimiter(): Promise<void> {
+		let response: RateLimiterCheckLimitResult;
+
 		try {
-			let response: RateLimiterCheckLimitResult;
+			response = await this._limiter
+				.fetch("https://dummy-url", { method: "post" })
+				.then((res) => res.json());
+		} catch {
+			/**
+			 * !HACK
+			 * @description `fetch()` threw an exception. This is probably because the limiter
+			 * disconnected. Stubs implement E-order semantics, meaning that calls to the same
+			 * stub are delivered to the remote object in-order, until the stub becomes
+			 * disconnected, after which point all further calls fail. This guarantee makes a
+			 * lot of complex interaction patterns easier, but it means we must be prepared for
+			 * the occasional disconnect, as networks are inherently unreliable.
+			 * @author David Lee
+			 * @date August 18, 2022
+			 */
+			this._limiter = this._config.getLimiterStub();
 
-			try {
-				response = await this._limiter
-					.fetch("https://dummy-url", { method: "post" })
-					.then((res) => res.json());
-			} catch {
-				/**
-				 * !HACK
-				 * @description `fetch()` threw an exception. This is probably because the limiter
-				 * disconnected. Stubs implement E-order semantics, meaning that calls to the same
-				 * stub are delivered to the remote object in-order, until the stub becomes
-				 * disconnected, after which point all further calls fail. This guarantee makes a
-				 * lot of complex interaction patterns easier, but it means we must be prepared for
-				 * the occasional disconnect, as networks are inherently unreliable.
-				 * @author David Lee
-				 * @date August 18, 2022
-				 */
-				this._limiter = this._config.getLimiterStub();
-
-				response = await this._limiter
-					.fetch("https://dummy-url", { method: "post" })
-					.then((res) => res.json());
-			}
-
-			this._state = response;
-		} catch (error) {
-			if (error instanceof Error) {
-				options?.onError?.(error);
-				
-				return;
-			}
-			
-			options?.onError?.(new Error("Unexpected rate limiter error"));
+			response = await this._limiter
+				.fetch("https://dummy-url", { method: "post" })
+				.then((res) => res.json());
 		}
+
+		this._state = response;
 	}
 }

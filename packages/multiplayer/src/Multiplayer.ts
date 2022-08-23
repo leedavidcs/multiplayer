@@ -62,7 +62,8 @@ export interface MultiplayerRegisterOptions<
 	TOutput extends EventRecord<string, any> = {}
 > {
 	middleware?: (
-		helpers: EventResolverHelpers<TContext, TOutput>
+		helpers: EventResolverHelpers<TContext, TOutput>,
+		next: () => void
 	) => MaybePromise<void>;
 }
 
@@ -215,13 +216,23 @@ export class Multiplayer<
 				return;
 			}
 
+			let goNext: boolean = false;
+
+			const next = () => {
+				goNext = true;
+			};
+
 			try {
-				await Promise.resolve(options?.middleware?.(helpers));
+				options?.middleware
+					? await Promise.resolve(options.middleware(helpers, next))
+					: next();
 			} catch (error) {
 				this._handleWsError(webSocket, error);
 	
 				return;
 			}
+
+			if (!goNext) return;
 
 			const rawMessage = MultiplayerInternal.parseMessage(message);
 
