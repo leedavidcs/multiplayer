@@ -1,0 +1,11 @@
+{
+	"extends": "@package/tsconfig/wrangler.json",
+	"include": [
+		"types.d.ts",
+		"**/*.ts"
+	],
+	"compilerOptions": {
+		"baseUrl": ".",
+		"types": ["types.d.ts"]
+	}
+}
