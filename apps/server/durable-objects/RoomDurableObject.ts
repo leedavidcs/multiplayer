@@ -14,8 +14,8 @@ interface Context {
 
 const multiplayer = createMultiplayer<Context, {}>();
 
-const router = createRouter<Env>()
-	.path("/websocket", (__, { env, request }) => {
+const router = createRouter<Context>()
+	.path("/websocket", (__, { context: { env }, request }) => {
 		if (!RequestUtils.isWebSocketRequest(request)) {
 			return new Response("Expected websocket", { status: 400 });
 		}
@@ -28,7 +28,7 @@ const router = createRouter<Env>()
 			duration: ms("1m"),
 			getLimiterStub: () => env.limiters.get(limiterId),
 			maxRequests: 1_000
-		})
+		});
 
 		multiplayer.register(server, {
 			middleware: ({ session }, next) => {
@@ -58,14 +58,13 @@ export class RoomDurableObject implements DurableObject {
 	private _router = router;
 
 	constructor(state: DurableObjectState, env: Env) {
-		this._multiplayer.config({
-			context: {
-				env,
-				storage: state.storage
-			}
-		});
+		const context: Context = {
+			env,
+			storage: state.storage
+		};
 
-		this._router.config({ env });
+		this._multiplayer.config({ context });
+		this._router.config({ context });
 	}
 
 	async fetch(request: Request): Promise<Response> {

@@ -19,32 +19,35 @@ export type PathParams<T extends string> = T extends string
 			: {}
 	: `Error: Could not resolve path: ${T}`;
 
-interface RouterPathHandlerHelpers<TEnv> {
-	env: TEnv;
+interface RouterPathHandlerHelpers<TContext> {
+	context: TContext;
 	request: Request;
 }
 
-type RouterPathHandler<TEnv, T extends PathParamRecord<string, any>> = (
+type RouterPathHandler<TContext, T extends PathParamRecord<string, any>> = (
 	params: Id<T>,
-	helpers: RouterPathHandlerHelpers<TEnv>
+	helpers: RouterPathHandlerHelpers<TContext>
 ) => Promise<Response> | Response | void;
 
 type RouterPathRecord<
-	TEnv,
+	TContext,
 	TPathName extends string,
 	TPathParams extends PathParams<TPathName>
-> = Record<TPathName, RouterPathHandler<TEnv, Id<TPathParams>>>;
+> = Record<TPathName, RouterPathHandler<TContext, Id<TPathParams>>>;
 
-export interface RouterConfigOptions<TEnv> {
-	env: TEnv;
+export interface RouterConfigOptions<TContext> {
+	context: TContext;
 }
 
-export interface RouterOptions<TEnv, TPaths extends RouterPathRecord<TEnv, string, any>> {
+export interface RouterOptions<
+	TContext,
+	TPaths extends RouterPathRecord<TContext, string, any>
+> {
 	paths?: TPaths;
 }
 
-export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {}> {
-	private _config: RouterConfigOptions<TEnv> | null = null;
+export class Router<TContext, TPaths extends RouterPathRecord<TContext, string, any> = {}> {
+	private _config: RouterConfigOptions<TContext> | null = null;
 	
 	/**
 	 * !HACK
@@ -56,11 +59,11 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 	 */
 	public paths: TPaths;
 
-	constructor(options: RouterOptions<TEnv, TPaths> = {}) {
+	constructor(options: RouterOptions<TContext, TPaths> = {}) {
 		this.paths = options.paths ?? {} as TPaths;
 	}
 
-	public config(options: RouterConfigOptions<TEnv>): Router<TEnv, TPaths> {
+	public config(options: RouterConfigOptions<TContext>): Router<TContext, TPaths> {
 		if (this._config) {
 			throw new Error("Router has already been configured");
 		}
@@ -93,19 +96,19 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 		if (!handler) return new Response("Not found", { status: 404 });
 
 		return await handler(params, {
-			request,
-			env: this._config.env
+			context: this._config.context,
+			request
 		}) ?? new Response("OK", { status: 200 });
 	}
 
 	public static merge<
-		TEnvStatic,
-		TPathsStatic1 extends RouterPathRecord<TEnvStatic, string, any>,
-		TPathsStatic2 extends RouterPathRecord<TEnvStatic, string, any>
+		TContextStatic,
+		TPathsStatic1 extends RouterPathRecord<TContextStatic, string, any>,
+		TPathsStatic2 extends RouterPathRecord<TContextStatic, string, any>
 	>(
-		router1: Router<TEnvStatic, TPathsStatic1>,
-		router2: Router<TEnvStatic, TPathsStatic2>
-	): Router<TEnvStatic, Spread<[TPathsStatic1, TPathsStatic2]>> {
+		router1: Router<TContextStatic, TPathsStatic1>,
+		router2: Router<TContextStatic, TPathsStatic2>
+	): Router<TContextStatic, Spread<[TPathsStatic1, TPathsStatic2]>> {
 		const paths1 = router1.paths;
 		const paths2 = router2.paths;
 
@@ -120,14 +123,14 @@ export class Router<TEnv, TPaths extends RouterPathRecord<TEnv, string, any> = {
 
 	public path<TPath extends string>(
 		pattern: TPath,
-		handler: RouterPathHandler<TEnv, Id<PathParams<TPath>>>
-	): Router<TEnv, Spread<[TPaths, RouterPathRecord<TEnv, TPath, PathParams<TPath>>]>> {
-		const newPath = { [pattern]: handler } as RouterPathRecord<TEnv, TPath, PathParams<TPath>>;
+		handler: RouterPathHandler<TContext, Id<PathParams<TPath>>>
+	): Router<TContext, Spread<[TPaths, RouterPathRecord<TContext, TPath, PathParams<TPath>>]>> {
+		const newPath = { [pattern]: handler } as RouterPathRecord<TContext, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
 	}
 }
 
-export const createRouter = <TEnv = {}>(): Router<TEnv, {}> => {
-	return new Router<TEnv>();
+export const createRouter = <TContext = {}>(): Router<TContext, {}> => {
+	return new Router<TContext>();
 };
