@@ -1,5 +1,7 @@
 import { ObjectUtils } from "@package/common-utils";
 import {
+	AbstractMessageEvent,
+	AbstractWebSocket,
 	DefaultClientEventRecord,
 	DefaultServerMessage,
 	EventData,
@@ -14,7 +16,7 @@ import {
 interface WebSocketSession {
 	id: string;
 	quit: boolean;
-	webSocket: WebSocket;
+	webSocket: AbstractWebSocket;
 }
 
 interface EventResolverHelpers<
@@ -114,7 +116,7 @@ export class Multiplayer<
 		});
 
 		this._sessions.forEach((session) => {
-			Multiplayer._sendMessage(session.webSocket, message);
+			session.webSocket.sendMessage(message);
 		});
 
 		quitters.forEach((quitter) => {
@@ -182,7 +184,7 @@ export class Multiplayer<
 	}
 
 	public register(
-		webSocket: WebSocket,
+		webSocket: AbstractWebSocket,
 		options?: MultiplayerRegisterOptions<TContext, TOutput>
 	): void {
 		if (!this._config) {
@@ -227,14 +229,14 @@ export class Multiplayer<
 					? await Promise.resolve(options.middleware(helpers, next))
 					: next();
 			} catch (error) {
-				this._handleWsError(webSocket, error);
+				webSocket.handleError(error);
 	
 				return;
 			}
 
 			if (!goNext) return;
 
-			const rawMessage = MultiplayerInternal.parseMessage(message);
+			const rawMessage = MultiplayerInternal.parseMessage(message as AbstractMessageEvent);
 
 			/**
 			 * !HACK
@@ -262,7 +264,7 @@ export class Multiplayer<
 					 */
 					{} as TInput[string];
 			} catch(error) {
-				this._handleWsError(webSocket, error, "Invalid input");
+				webSocket.handleError(error, "Invalid input");
 	
 				return;
 			}
@@ -270,7 +272,7 @@ export class Multiplayer<
 			try {
 				await Promise.resolve(eventConfig.resolver(input, helpers));
 			} catch (error) {
-				this._handleWsError(webSocket, error);
+				webSocket.handleError(error);
 			}
 		});
 
@@ -289,38 +291,6 @@ export class Multiplayer<
 
 		webSocket.addEventListener("close", closeHandler);
 		webSocket.addEventListener("error", closeHandler);
-	}
-
-	private _handleWsError(
-		webSocket: WebSocket,
-		error: unknown,
-		message?: string
-	): void {
-		if (!(error instanceof Error)) {
-			Multiplayer._sendMessage(webSocket, {
-				type: "$ERROR",
-				data: {
-					message: "Unexpected error",
-					stack: null
-				}
-			});
-
-			return;
-		}
-
-		Multiplayer._sendMessage(webSocket, {
-			type: "$ERROR",
-			data: {
-				message: message ?? error.message,
-				stack: error.stack ?? null
-			}
-		});
-	}
-
-	private static _sendMessage<
-		TMessage extends EventMessage<string, any> = EventMessage<string, any>
-	>(webSocket: WebSocket, data: TMessage): void {
-		webSocket.send(JSON.stringify(data));
 	}
 }
 
