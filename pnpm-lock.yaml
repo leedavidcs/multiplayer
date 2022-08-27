@@ -146,7 +146,7 @@ importers:
       '@package/typings': link:../typings
       typescript: 4.7.4
 
-  packages/multiplayer-platforms:
+  packages/multiplayer-platform-cloudflare:
     specifiers:
       '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*

@@ -1,5 +1,5 @@
 {
-	"name": "@package/multiplayer-platforms",
+	"name": "@package/multiplayer-platform-cloudflare",
 	"version": "0.0.0",
 	"private": true,
 	"main": "src/index.ts",
