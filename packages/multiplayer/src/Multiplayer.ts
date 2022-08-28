@@ -1,17 +1,19 @@
 import { ObjectUtils } from "@package/common-utils";
 import {
-	AbstractMessageEvent,
-	AbstractWebSocket,
 	DefaultClientEventRecord,
 	DefaultServerMessage,
 	EventData,
-	EventMessage,
 	EventRecord,
 	InferEventMessage,
 	InputZodLike,
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
+import { AbstractMultiplayerPlatform } from "./AbstractMultiplayerPlatform";
+import {
+	AbstractMessageEvent,
+	AbstractWebSocket
+} from "./AbstractWebSocket";
 
 interface WebSocketSession {
 	id: string;
@@ -70,14 +72,17 @@ export interface MultiplayerRegisterOptions<
 }
 
 export interface MultiplayerOptions<
+	TPlatform extends AbstractMultiplayerPlatform,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
-	TInput extends EventRecord<string, any> = {}
+	TInput extends EventRecord<string, any> = {},
 > {
 	events?: InferEventConfig<TContext, TOutput, TInput>;
+	platform: TPlatform;
 }
 
 export class Multiplayer<
+	TPlatform extends AbstractMultiplayerPlatform,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
@@ -96,10 +101,13 @@ export class Multiplayer<
 	private _sessions = new Map<string, WebSocketSession>();
 
 	public events: InferEventConfig<TContext, TOutput, TInput>;
+	public platform: TPlatform;
 
-	constructor(options: MultiplayerOptions<TContext, TOutput, TInput> = {}) {
+	constructor(options: MultiplayerOptions<TPlatform, TContext, TOutput, TInput>) {
 		this.events = options.events
 			?? {} as InferEventConfig<TContext, TOutput, TInput>;
+
+		this.platform = options.platform;
 	}
 
 	public broadcast(
@@ -131,7 +139,7 @@ export class Multiplayer<
 
 	public config(
 		options: MultiplayerConfigOptions<TContext>
-	): Multiplayer<TContext, TOutput, TInput> {
+	): Multiplayer<TPlatform, TContext, TOutput, TInput> {
 		if (this._config) {
 			throw new Error("Multiplayer has already been configured.");
 		}
@@ -148,6 +156,7 @@ export class Multiplayer<
 		event: TEvent,
 		config: EventConfig<TContext, TOutput, TData>
 	): Multiplayer<
+		TPlatform,
 		TContext,
 		TOutput,
 		Spread<[
@@ -163,24 +172,28 @@ export class Multiplayer<
 			[event]: config
 		} as InferEventConfig<TContext, TOutput, EventRecord<TEvent, TData>>;
 
-		return Multiplayer.merge(this, new Multiplayer({ events: newEvent }));
+		return Multiplayer.merge(this, new Multiplayer({ events: newEvent, platform: this.platform }));
 	}
 
 	public static merge<
+		TPlatformStatic extends AbstractMultiplayerPlatform,
 		TContextStatic extends Record<string, any> = {},
 		TOutputStatic extends EventRecord<string, any> = {},
 		TInputStatic1 extends EventRecord<string, any> = {},
 		TInputStatic2 extends EventRecord<string, any> = {}
 	>(
-		multiplayer1: Multiplayer<TContextStatic, TOutputStatic, TInputStatic1>,
-		multiplayer2: Multiplayer<TContextStatic, TOutputStatic, TInputStatic2>
-	): Multiplayer<TContextStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
+		multiplayer1: Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic1>,
+		multiplayer2: Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic2>
+	): Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
 		const events1 = multiplayer1.events;
 		const events2 = multiplayer2.events;
 
 		const mergedEvents = ObjectUtils.safeAssign(events1, events2);
 
-		return new Multiplayer({ events: mergedEvents as any });
+		return new Multiplayer({
+			events: mergedEvents as any,
+			platform: multiplayer1.platform
+		});
 	}
 
 	protected _register(
@@ -294,17 +307,29 @@ export class Multiplayer<
 	}
 }
 
+export interface CreateMultiplayerOptions<
+	TPlatform extends AbstractMultiplayerPlatform
+> {
+	platform: TPlatform;
+}
+
 export const createMultiplayer = <
+	TPlatform extends AbstractMultiplayerPlatform,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
->(): Multiplayer<TContext, TOutput, DefaultClientEventRecord> => {
-	return new Multiplayer<TContext, TOutput, DefaultClientEventRecord>({
+>(
+	options: CreateMultiplayerOptions<TPlatform>
+): Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord> => {
+	const { platform } = options;
+
+	return new Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
 				resolver: (data, { broadcast }) => {
 					broadcast({ type: "$PONG", data: {} });
 				}
 			}
-		}
+		},
+		platform
 	});
 };
