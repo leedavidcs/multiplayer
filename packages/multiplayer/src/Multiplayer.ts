@@ -183,7 +183,7 @@ export class Multiplayer<
 		return new Multiplayer({ events: mergedEvents as any });
 	}
 
-	public register(
+	protected _register(
 		webSocket: AbstractWebSocket,
 		options?: MultiplayerRegisterOptions<TContext, TOutput>
 	): void {

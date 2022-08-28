@@ -12,20 +12,24 @@ export type AbstractErrorEvent = AbstractEvent & {
 	error: unknown;
 	message: string;
 };
-export type AbstractListenerEvent =
-	| AbstractCloseEvent
-	| AbstractMessageEvent
-	| AbstractEvent
-	| AbstractErrorEvent;
+export interface AbstractEventMap {
+	close: AbstractCloseEvent;
+	message: AbstractMessageEvent;
+	open: AbstractEvent;
+	error: AbstractErrorEvent;
+}
 
-export type AbstractListener = (event: AbstractListenerEvent) => MaybePromise<void>;
+export type EventType = keyof AbstractEventMap;
+
+export type AbstractListener<TType extends keyof AbstractEventMap> =
+	(event: AbstractEventMap[TType]) => MaybePromise<void>;
 
 export abstract class AbstractWebSocket {
 	public abstract accept(): void;
 
-	public abstract addEventListener<TType extends string>(
+	public abstract addEventListener<TType extends EventType>(
 		type: TType,
-		handler: AbstractListener
+		handler: AbstractListener<TType>
 	): void;
 
 	public abstract close(
