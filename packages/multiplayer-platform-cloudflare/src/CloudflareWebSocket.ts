@@ -1,4 +1,4 @@
-import { AbstractEventMap, AbstractListener, AbstractWebSocket } from "@package/multiplayer-internal";
+import { AbstractEventMap, AbstractWebSocket } from "@package/multiplayer";
 
 export interface CloudflareWebSocketEventMap {
 	close: CloseEvent;

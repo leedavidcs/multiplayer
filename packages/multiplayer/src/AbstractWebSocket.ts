@@ -1,4 +1,4 @@
-import { EventMessage } from "./types";
+import type { EventMessage } from "@package/multiplayer-internal";
 
 export type AbstractEvent = Record<string, never>;
 export type AbstractCloseEvent = AbstractEvent & {
