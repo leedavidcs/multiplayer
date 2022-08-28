@@ -9,7 +9,7 @@ import {
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
-import { AbstractMultiplayerPlatform } from "./AbstractMultiplayerPlatform";
+import { AbstractMultiplayerPlatform, InferWebSocketType } from "./AbstractMultiplayerPlatform";
 import {
 	AbstractMessageEvent,
 	AbstractWebSocket
@@ -196,8 +196,8 @@ export class Multiplayer<
 		});
 	}
 
-	protected _register(
-		webSocket: AbstractWebSocket,
+	public register(
+		webSocket: InferWebSocketType<TPlatform>,
 		options?: MultiplayerRegisterOptions<TContext, TOutput>
 	): void {
 		if (!this._config) {
@@ -206,12 +206,14 @@ export class Multiplayer<
 			);
 		}
 
-		webSocket.accept();
+		const multiplayerWs = this.platform.convertWebSocket(webSocket);
+
+		multiplayerWs.accept();
 
 		const session: WebSocketSession = {
 			id: crypto.randomUUID(),
 			quit: false,
-			webSocket
+			webSocket: multiplayerWs
 		};
 
 		this._sessions.set(session.id, session);
@@ -223,10 +225,10 @@ export class Multiplayer<
 			session
 		};
 
-		webSocket.addEventListener("message", async (message) => {
+		multiplayerWs.addEventListener("message", async (message) => {
 			// Should not reach here. But handling it just in-case.
 			if (session.quit) {
-				webSocket.close(1011, "WebSocket broken");
+				multiplayerWs.close(1011, "WebSocket broken");
 
 				return;
 			}
@@ -242,7 +244,7 @@ export class Multiplayer<
 					? await Promise.resolve(options.middleware(helpers, next))
 					: next();
 			} catch (error) {
-				webSocket.handleError(error);
+				multiplayerWs.handleError(error);
 	
 				return;
 			}
@@ -277,7 +279,7 @@ export class Multiplayer<
 					 */
 					{} as TInput[string];
 			} catch(error) {
-				webSocket.handleError(error, "Invalid input");
+				multiplayerWs.handleError(error, "Invalid input");
 	
 				return;
 			}
@@ -285,7 +287,7 @@ export class Multiplayer<
 			try {
 				await Promise.resolve(eventConfig.resolver(input, helpers));
 			} catch (error) {
-				webSocket.handleError(error);
+				multiplayerWs.handleError(error);
 			}
 		});
 
@@ -302,8 +304,8 @@ export class Multiplayer<
 			});
 		};
 
-		webSocket.addEventListener("close", closeHandler);
-		webSocket.addEventListener("error", closeHandler);
+		multiplayerWs.addEventListener("close", closeHandler);
+		multiplayerWs.addEventListener("error", closeHandler);
 	}
 }
 
