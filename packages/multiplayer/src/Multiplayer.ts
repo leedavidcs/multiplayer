@@ -82,7 +82,7 @@ export interface MultiplayerOptions<
 }
 
 export class Multiplayer<
-	TPlatform extends AbstractMultiplayerPlatform,
+	TPlatform extends AbstractMultiplayerPlatform<any>,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
