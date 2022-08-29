@@ -10,10 +10,7 @@ import {
 	MultiplayerLike
 } from "@package/multiplayer-internal";
 import { AbstractMultiplayerPlatform, InferWebSocketType } from "./AbstractMultiplayerPlatform";
-import {
-	AbstractMessageEvent,
-	AbstractWebSocket
-} from "./AbstractWebSocket";
+import { AbstractWebSocket } from "./AbstractWebSocket";
 
 interface WebSocketSession {
 	id: string;
