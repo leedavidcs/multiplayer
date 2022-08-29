@@ -321,10 +321,9 @@ export class Multiplayer<
 
 export const createMultiplayer = <
 	TContext extends Record<string, any> = {},
-	TOutput extends EventRecord<string, any> = {},
-	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null
->(): Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord> => {
-	return new Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord>({
+	TOutput extends EventRecord<string, any> = {}
+>(): Multiplayer<null, TContext, TOutput, DefaultClientEventRecord> => {
+	return new Multiplayer<null, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
 				resolver: (data, { session }) => {
