@@ -337,7 +337,7 @@ export const createMultiplayer = <
 	return new Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
-				resolver: (data, { broadcast, session }) => {
+				resolver: (data, { session }) => {
 					session.webSocket.sendMessage({ type: "$PONG", data: {} });
 				}
 			}
