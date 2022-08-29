@@ -72,17 +72,17 @@ export interface MultiplayerRegisterOptions<
 }
 
 export interface MultiplayerOptions<
-	TPlatform extends AbstractMultiplayerPlatform,
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {},
 > {
 	events?: InferEventConfig<TContext, TOutput, TInput>;
-	platform: TPlatform;
+	platform?: TPlatform;
 }
 
 export class Multiplayer<
-	TPlatform extends AbstractMultiplayerPlatform<any>,
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {}
@@ -104,10 +104,12 @@ export class Multiplayer<
 	public platform: TPlatform;
 
 	constructor(options: MultiplayerOptions<TPlatform, TContext, TOutput, TInput>) {
-		this.events = options.events
+		const { events, platform = null } = options;
+
+		this.events = events
 			?? {} as InferEventConfig<TContext, TOutput, TInput>;
 
-		this.platform = options.platform;
+		this.platform = platform as TPlatform;
 	}
 
 	public broadcast(
@@ -137,18 +139,6 @@ export class Multiplayer<
 		});
 	}
 
-	public config(
-		options: MultiplayerConfigOptions<TContext>
-	): Multiplayer<TPlatform, TContext, TOutput, TInput> {
-		if (this._config) {
-			throw new Error("Multiplayer has already been configured.");
-		}
-
-		this._config = options;
-
-		return this;
-	}
-
 	public event<
 		TEvent extends string,
 		TData extends EventData = {}
@@ -172,11 +162,17 @@ export class Multiplayer<
 			[event]: config
 		} as InferEventConfig<TContext, TOutput, EventRecord<TEvent, TData>>;
 
-		return Multiplayer.merge(this, new Multiplayer({ events: newEvent, platform: this.platform }));
+		return Multiplayer.merge(
+			this,
+			new Multiplayer({
+				events: newEvent,
+				platform: this.platform
+			})
+		);
 	}
 
 	public static merge<
-		TPlatformStatic extends AbstractMultiplayerPlatform,
+		TPlatformStatic extends Maybe<AbstractMultiplayerPlatform<any>>,
 		TContextStatic extends Record<string, any> = {},
 		TOutputStatic extends EventRecord<string, any> = {},
 		TInputStatic1 extends EventRecord<string, any> = {},
@@ -203,6 +199,12 @@ export class Multiplayer<
 		if (!this._config) {
 			throw new Error(
 				"Must call \"config\" before registering a new WebSocket."
+			);
+		}
+
+		if (!this.platform) {
+			throw new Error(
+				"Must provide a platform before registering a new WebSocket."
 			);
 		}
 
@@ -307,23 +309,31 @@ export class Multiplayer<
 		multiplayerWs.addEventListener("close", closeHandler);
 		multiplayerWs.addEventListener("error", closeHandler);
 	}
-}
 
-export interface CreateMultiplayerOptions<
-	TPlatform extends AbstractMultiplayerPlatform
-> {
-	platform: TPlatform;
+	public setConfig(
+		options: MultiplayerConfigOptions<TContext>
+	): Multiplayer<TPlatform, TContext, TOutput, TInput> {
+		if (this._config) {
+			throw new Error("Multiplayer has already been configured.");
+		}
+
+		this._config = options;
+
+		return this;
+	}
+
+	public usePlatform<
+		TNewPlatform extends AbstractMultiplayerPlatform<any>
+	>(platform: TNewPlatform): Multiplayer<TNewPlatform, TContext, TOutput, TInput> {
+		return new Multiplayer({ events: this.events, platform });
+	}
 }
 
 export const createMultiplayer = <
-	TPlatform extends AbstractMultiplayerPlatform,
 	TContext extends Record<string, any> = {},
-	TOutput extends EventRecord<string, any> = {}
->(
-	options: CreateMultiplayerOptions<TPlatform>
-): Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord> => {
-	const { platform } = options;
-
+	TOutput extends EventRecord<string, any> = {},
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null
+>(): Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord> => {
 	return new Multiplayer<TPlatform, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
@@ -331,7 +341,6 @@ export const createMultiplayer = <
 					broadcast({ type: "$PONG", data: {} });
 				}
 			}
-		},
-		platform
+		}
 	});
 };

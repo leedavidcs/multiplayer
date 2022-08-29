@@ -1,7 +1,7 @@
 import { AbstractWebSocket } from "./AbstractWebSocket";
 
-export type InferWebSocketType<TPlatform extends AbstractMultiplayerPlatform<any>> =
-	TPlatform extends AbstractMultiplayerPlatform<infer IWebSocket>
+export type InferWebSocketType<TPlatform extends Maybe<AbstractMultiplayerPlatform<any>>> =
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<infer IWebSocket>>
 		? IWebSocket
 		: never;
 

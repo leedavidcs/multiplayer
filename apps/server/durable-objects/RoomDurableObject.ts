@@ -1,5 +1,6 @@
 import { ms } from "@package/common-utils";
 import { createMultiplayer } from "@package/multiplayer";
+import { platformCloudflare } from "@package/multiplayer-platform-cloudflare";
 import {
 	createRouter,
 	RateLimiterClient,
@@ -12,7 +13,7 @@ interface Context {
 	storage: DurableObjectStorage;
 }
 
-const multiplayer = createMultiplayer<Context, {}>();
+const multiplayer = createMultiplayer<Context>().usePlatform(platformCloudflare());
 
 const router = createRouter<Context>()
 	.path("/websocket", (__, { context: { env }, request }) => {
@@ -63,7 +64,7 @@ export class RoomDurableObject implements DurableObject {
 			storage: state.storage
 		};
 
-		this._multiplayer.config({ context });
+		this._multiplayer.setConfig({ context });
 		this._router.config({ context });
 	}
 

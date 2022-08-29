@@ -19,6 +19,7 @@ importers:
       '@package/eslint-config-custom': workspace:*
       '@package/multiplayer': workspace:*
       '@package/multiplayer-internal': workspace:*
+      '@package/multiplayer-platform-cloudflare': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       '@package/wrangler-utils': workspace:*
@@ -29,6 +30,7 @@ importers:
       '@package/common-utils': link:../../packages/common-utils
       '@package/multiplayer': link:../../packages/multiplayer
       '@package/multiplayer-internal': link:../../packages/multiplayer-internal
+      '@package/multiplayer-platform-cloudflare': link:../../packages/multiplayer-platform-cloudflare
       zod: 3.18.0
     devDependencies:
       '@cloudflare/workers-types': 3.14.1
