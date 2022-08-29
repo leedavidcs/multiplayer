@@ -1,6 +1,6 @@
 import type { EventMessage } from "@package/multiplayer-internal";
 
-export type AbstractEvent = Record<string, never>;
+export type AbstractEvent = {};
 export type AbstractCloseEvent = AbstractEvent & {
 	readonly code: number;
 	readonly reason: string;
@@ -27,6 +27,16 @@ export type AbstractListener<TType extends keyof AbstractEventMap> =
 export abstract class AbstractWebSocket {
 	public abstract accept(): void;
 
+	/**
+	 * TODO
+	 * @description Return an unsubscribe method to remove the event-listener.
+	 * This is preferred over adding an explicit abstract removeEventListener
+	 * method, because the implementing class might have to transform the
+	 * listener, and removing the same listener might be complicated as a
+	 * result.
+	 * @author David Lee
+	 * @date August 28, 2022
+	 */
 	public abstract addEventListener<TType extends EventType>(
 		type: TType,
 		handler: AbstractListener<TType>
@@ -39,14 +49,14 @@ export abstract class AbstractWebSocket {
 
 	public abstract send(
 		message: string | ArrayBuffer | ArrayBufferView
-	): void;
+	): Promise<void>;
 
-	public handleError(
+	public async handleError(
 		error: unknown,
 		message?: string
-	): void {
+	): Promise<void> {
 		if (error instanceof Error) {
-			this.sendMessage({
+			await this.sendMessage({
 				type: "$ERROR",
 				data: {
 					message: message ?? error.message,
@@ -57,7 +67,7 @@ export abstract class AbstractWebSocket {
 			return;
 		}
 
-		this.sendMessage({
+		await this.sendMessage({
 			type: "$ERROR",
 			data: {
 				message: "Unexpected error",
@@ -66,9 +76,9 @@ export abstract class AbstractWebSocket {
 		});
 	}
 
-	public sendMessage<
+	public async sendMessage<
 		TMessage extends EventMessage<string, any> = EventMessage<string, any>
-	>(data: TMessage): void {
-		this.send(JSON.stringify(data));
+	>(data: TMessage): Promise<void> {
+		await Promise.resolve(this.send(JSON.stringify(data)));
 	}
 }

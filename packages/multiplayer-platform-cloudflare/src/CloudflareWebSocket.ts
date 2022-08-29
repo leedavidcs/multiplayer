@@ -1,4 +1,4 @@
-import { AbstractEventMap, AbstractWebSocket } from "@package/multiplayer";
+import { AbstractEventMap, AbstractListener, AbstractWebSocket } from "@package/multiplayer";
 
 export interface CloudflareWebSocketEventMap {
 	close: CloseEvent;
@@ -22,7 +22,7 @@ export class CloudflareWebSocket extends AbstractWebSocket {
 
 	public addEventListener<TType extends keyof AbstractEventMap>(
 		type: TType,
-		handler: (event: AbstractEventMap[TType]) => MaybePromise<void>
+		handler: AbstractListener<TType>
 	) {
 		this.webSocket.addEventListener(type, handler as any);
 	}
@@ -31,7 +31,7 @@ export class CloudflareWebSocket extends AbstractWebSocket {
 		this.webSocket.close(code, reason);
 	}
 
-	public send(message: string | ArrayBuffer | ArrayBufferView): void {
-		this.webSocket.send(message);
+	public async send(message: string | ArrayBuffer | ArrayBufferView): Promise<void> {
+		await Promise.resolve(this.webSocket.send(message));
 	}
 }

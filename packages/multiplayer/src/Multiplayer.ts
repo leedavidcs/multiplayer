@@ -22,7 +22,7 @@ interface EventResolverHelpers<
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
 > {
-	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => void;
+	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => Promise<void>;
 	context: TContext;
 	session: WebSocketSession;
 }
@@ -109,9 +109,9 @@ export class Multiplayer<
 		this.platform = platform as TPlatform;
 	}
 
-	public broadcast(
+	public async broadcast(
 		message: InferEventMessage<TOutput> | DefaultServerMessage
-	): void {
+	): Promise<void> {
 		const quitters: WebSocketSession[] = [];
 
 		this._sessions.forEach((session) => {
@@ -122,18 +122,18 @@ export class Multiplayer<
 			this._sessions.delete(session.id);
 		});
 
-		this._sessions.forEach((session) => {
-			session.webSocket.sendMessage(message);
-		});
+		await Promise.all(Array.from(this._sessions.values()).map(((session) => {
+			return session.webSocket.sendMessage(message);
+		})));
 
-		quitters.forEach((quitter) => {
-			this.broadcast({
+		await Promise.all(quitters.map((quitter) => {
+			return this.broadcast({
 				type: "$EXIT",
 				data: {
 					sessionId: quitter.id,
 				}
-			});
-		});
+			})
+		}));
 	}
 
 	public event<
@@ -283,12 +283,12 @@ export class Multiplayer<
 			}
 		});
 
-		const closeHandler = () => {
+		const closeHandler = async (): Promise<void> => {
 			session.quit = true;
 
 			this._sessions.delete(session.id);
 
-			this.broadcast({
+			await this.broadcast({
 				type: "$EXIT",
 				data: {
 					sessionId: session.id,
@@ -326,8 +326,8 @@ export const createMultiplayer = <
 	return new Multiplayer<null, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
-				resolver: (data, { session }) => {
-					session.webSocket.sendMessage({ type: "$PONG", data: {} });
+				resolver: async (data, { session }) => {
+					await session.webSocket.sendMessage({ type: "$PONG", data: {} });
 				}
 			}
 		}
