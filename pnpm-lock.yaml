@@ -169,6 +169,25 @@ importers:
       '@package/typings': link:../typings
       typescript: 4.7.4
 
+  packages/multiplayer-platform-node:
+    specifiers:
+      '@package/common-utils': workspace:*
+      '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer': workspace:*
+      '@package/multiplayer-internal': workspace:*
+      '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
+      typescript: ^4.7.4
+    dependencies:
+      '@package/common-utils': link:../common-utils
+      '@package/multiplayer': link:../multiplayer
+      '@package/multiplayer-internal': link:../multiplayer-internal
+    devDependencies:
+      '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/tsconfig': link:../tsconfig
+      '@package/typings': link:../typings
+      typescript: 4.7.4
+
   packages/tsconfig:
     specifiers: {}
 
@@ -176,6 +195,7 @@ importers:
     specifiers:
       '@cloudflare/workers-types': ^3.14.1
       '@package/tsconfig': workspace:*
+      '@types/node': ^18.6.4
       '@types/react': 18.0.15
       '@types/react-dom': ^18.0.6
       '@types/styled-components': ^5.1.25
@@ -187,6 +207,7 @@ importers:
     dependencies:
       '@cloudflare/workers-types': 3.14.1
       '@package/tsconfig': link:../tsconfig
+      '@types/node': 18.6.4
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       '@types/styled-components': 5.1.25

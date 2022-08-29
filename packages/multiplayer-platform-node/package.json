@@ -1,0 +1,22 @@
+{
+	"name": "@package/multiplayer-platform-node",
+	"version": "0.0.0",
+	"private": true,
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"files": [
+		"cloudflare.ts"
+	],
+	"sideEffects": false,
+	"dependencies": {
+		"@package/common-utils": "workspace:*",
+		"@package/multiplayer": "workspace:*",
+		"@package/multiplayer-internal": "workspace:*"
+	},
+	"devDependencies": {
+		"@package/eslint-config-custom": "workspace:*",
+		"@package/tsconfig": "workspace:*",
+		"@package/typings": "workspace:*",
+		"typescript": "^4.7.4"
+	}
+}
