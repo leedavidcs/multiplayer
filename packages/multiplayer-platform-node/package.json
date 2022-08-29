@@ -11,7 +11,9 @@
 	"dependencies": {
 		"@package/common-utils": "workspace:*",
 		"@package/multiplayer": "workspace:*",
-		"@package/multiplayer-internal": "workspace:*"
+		"@package/multiplayer-internal": "workspace:*",
+		"@types/ws": "^8.5.3",
+		"ws": "^8.8.1"
 	},
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",
