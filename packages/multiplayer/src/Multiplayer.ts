@@ -253,15 +253,8 @@ export class Multiplayer<
 
 			if (!goNext) return;
 
-			const rawMessage = MultiplayerInternal.parseMessage(message as AbstractMessageEvent);
+			const rawMessage = MultiplayerInternal.parseMessage(message);
 
-			/**
-			 * !HACK
-			 * @description We'll ignore any message that doesn't return a Json
-			 * for now
-			 * @author David Lee
-			 * @date August 10, 2022
-			 */
 			if (!rawMessage) return;
 
 			const eventConfig = this.events[rawMessage.type] ?? null;
