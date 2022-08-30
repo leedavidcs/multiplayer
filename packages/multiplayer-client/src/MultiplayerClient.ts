@@ -47,10 +47,13 @@ export class MultiplayerClient<
 	public apiEndpoint: string | (() => MaybePromise<string>);
 	public events: InferEventConfig<TInput>;
 
+	private _debug: boolean;
 	private _webSocket: WebSocketManager<TOutput>;
 
 	constructor(options: MultiplayerClientOptions<TInput>) {
 		super();
+
+		this._debug = options.debug ?? false;
 
 		this.apiEndpoint = options.apiEndpoint;
 		this.events = options.events ?? {} as InferEventConfig<TInput>;
@@ -62,6 +65,8 @@ export class MultiplayerClient<
 				const rawMessage = this._parseMessage(message);
 
 				if (!rawMessage) return;
+
+				this._logDebug("WebSocket event received: ", rawMessage.type, rawMessage);
 
 				this.dispatchEvent(new TypedEvent(rawMessage.type, rawMessage));
 			}
@@ -131,6 +136,10 @@ export class MultiplayerClient<
 
 	public reconnect(): Promise<void> {
 		return this._webSocket.reconnect();
+	}
+
+	private _logDebug(...data: any[]): void {
+		this._debug && console.log(data);
 	}
 
 	private _parseMessage(

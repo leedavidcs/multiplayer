@@ -79,7 +79,7 @@ export class WebSocketManager<
 		if (!this._state.webSocket) return;
 		if (this._state.connection.state !== ConnectionState.Open) return;
 
-		WebSocketManager._sendMessage(this._state.webSocket, message);
+		this._sendMessage(this._state.webSocket, message);
 	}
 
 	public async connect(): Promise<void> {
@@ -174,7 +174,7 @@ export class WebSocketManager<
 		clearTimeout(this._timeouts.pong ?? undefined);
 		this._timeouts.pong = setTimeout(this.reconnect.bind(this), PONG_TIMEOUT);
 
-		WebSocketManager._sendMessage(this._state.webSocket, {
+		this._sendMessage(this._state.webSocket, {
 			type: "$PING",
 			data: {}
 		});
@@ -230,14 +230,18 @@ export class WebSocketManager<
 		this._intervals.heartbeat = setInterval(this._heartbeat.bind(this), HEARTBEAT_INTERVAL);
 	}
 
-	private static _sendMessage<
+	private _sendMessage<
 		TMessage extends EventMessage<string, any> = EventMessage<string, any>
 	>(webSocket: WebSocket, data: TMessage): void {
+		this._logDebug("WebSocket event sent: ", data.type, data);
+
 		webSocket.send(JSON.stringify(data));
 	}
 
 	private _updateState(updater: (oldState: WebSocketState) => void): WebSocketState {
 		const newState = produce(this._state, updater);
+
+		this._logDebug("WebSocket new state: ", newState);
 
 		this._state = newState;
 
