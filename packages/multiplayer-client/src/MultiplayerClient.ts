@@ -163,6 +163,7 @@ export class MultiplayerClient<
 
 export interface CreateMultiplayerClientOptions {
 	apiEndpoint: string | (() => MaybePromise<string>);
+	debug?: boolean;
 }
 
 export const createClient = <TOutput extends EventRecord<string, any> = {}>(
