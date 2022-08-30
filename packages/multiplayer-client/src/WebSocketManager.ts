@@ -4,8 +4,6 @@ import { produce } from "immer";
 
 const HEARTBEAT_INTERVAL = ms("30s");
 const PONG_TIMEOUT = ms("2s");
-const ROOM_NAME_MAX_LENGTH = 32;
-const ROOM_NAME_PATTERN = /^[0-9a-f]{64}$/;
 
 interface WebSocketListeners {
 	onClose: (event: CloseEvent) => void;
@@ -85,6 +83,8 @@ export class WebSocketManager<
 	}
 
 	public async connect(): Promise<void> {
+		// Consider memoizing apiEndpoint as a private property, to avoid recomputing
+		// this, and what kind of impact memoizing would have on things such as auth
 		const apiEndpoint = typeof this._config.apiEndpoint === "string"
 			? this._config.apiEndpoint
 			: await Promise.resolve(this._config.apiEndpoint());
@@ -178,19 +178,6 @@ export class WebSocketManager<
 			type: "$PING",
 			data: {}
 		});
-	}
-
-	private _normalizeRoomName(roomName: string): string {
-		const normalized = roomName
-		.replace(/[^a-zA-Z0-9_-]/g, "")
-		.replace(/_/g, "-")
-		.toLowerCase();
-	
-		if (normalized.length > ROOM_NAME_MAX_LENGTH && !ROOM_NAME_PATTERN.test(roomName)) {
-			throw new Error("Invalid Multiplayer room name");
-		}
-	
-		return normalized;
 	}
 
 	/**
