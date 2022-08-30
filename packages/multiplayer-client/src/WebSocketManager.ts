@@ -180,6 +180,10 @@ export class WebSocketManager<
 		});
 	}
 
+	private _logDebug(...data: any[]): void {
+		this._config.debug && console.log(...data);
+	}
+
 	/**
 	 * TODO
 	 * @description Determine if ws was closed with a code for closing without retries.
@@ -188,7 +192,7 @@ export class WebSocketManager<
 	 * @date August 19, 2022
 	 */
 	private _onClose(event: CloseEvent): void {
-		if (this._config.debug) console.log(event.reason);
+		this._logDebug(event.reason);
 
 		clearInterval(this._intervals.heartbeat ?? undefined);
 		clearTimeout(this._timeouts.pong ?? undefined);
