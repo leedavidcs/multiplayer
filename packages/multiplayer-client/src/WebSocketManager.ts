@@ -39,7 +39,7 @@ export interface WebSocketState {
 }
 
 export interface WebSocketManagerConfig {
-	apiEndpoint: string;
+	apiEndpoint: string | (() => MaybePromise<string>);
 	debug?: boolean;
 	onChange?: (state: WebSocketState) => void;
 	onMessage?: (message: MessageEvent<string>) => void;
@@ -85,20 +85,11 @@ export class WebSocketManager<
 	}
 
 	public async connect(): Promise<void> {
-		const response = await fetch(
-			`${UrlUtils.preferHttps(this._config.apiEndpoint)}/api/room`
-		);
+		const apiEndpoint = typeof this._config.apiEndpoint === "string"
+			? this._config.apiEndpoint
+			: await Promise.resolve(this._config.apiEndpoint());
 
-		if (!response.ok) {
-			throw new Error("Could not connect to Multiplayer room.");
-		}
-
-		const roomName = await response.text();
-		const normalizedName = this._normalizeRoomName(roomName);
-
-		const webSocket = new WebSocket(
-			`${UrlUtils.preferWss(this._config.apiEndpoint)}/api/room/${normalizedName}/websocket`
-		);
+		const webSocket = new WebSocket(UrlUtils.preferWss(apiEndpoint));
 
 		this._updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Connecting;

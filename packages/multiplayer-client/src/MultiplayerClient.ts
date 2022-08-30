@@ -25,7 +25,7 @@ export type InferEventConfig<
 export interface MultiplayerClientOptions<
 	TEvents extends EventRecord<string, any> = {}
 > {
-	apiEndpoint: string;
+	apiEndpoint: string | (() => MaybePromise<string>);
 	debug?: boolean;
 	events?: InferEventConfig<TEvents>;
 }
@@ -44,7 +44,7 @@ export class MultiplayerClient<
 		input: TInput;
 	} = {} as any;
 
-	public apiEndpoint: string;
+	public apiEndpoint: string | (() => MaybePromise<string>);
 	public events: InferEventConfig<TInput>;
 
 	private _webSocket: WebSocketManager<TOutput>;
