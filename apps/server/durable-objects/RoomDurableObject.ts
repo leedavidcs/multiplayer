@@ -65,7 +65,7 @@ export class RoomDurableObject implements DurableObject {
 		};
 
 		this._multiplayer.setConfig({ context });
-		this._router.config({ context });
+		this._router.setConfig({ context });
 	}
 
 	async fetch(request: Request): Promise<Response> {

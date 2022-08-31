@@ -96,16 +96,6 @@ export class Router<
 		this.paths = options.paths ?? {} as TPaths;
 	}
 
-	public config(options: RouterConfigOptions<TContext>): Router<TContext, TPaths> {
-		if (this._config) {
-			throw new Error("Router has already been configured");
-		}
-
-		this._config = options;
-
-		return this;
-	}
-
 	public async match(request: Request): Promise<Response> {
 		if (!this._config) {
 			throw new Error(
@@ -167,6 +157,16 @@ export class Router<
 		] as RouterPaths<TContext, TMethod, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
+	}
+
+	public setConfig(options: RouterConfigOptions<TContext>): Router<TContext, TPaths> {
+		if (this._config) {
+			throw new Error("Router has already been configured");
+		}
+
+		this._config = options;
+
+		return this;
 	}
 
 	private _compareMethods(method1: string, method2: string): boolean {

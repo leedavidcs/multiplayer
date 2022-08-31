@@ -36,7 +36,7 @@ const worker: ExportedHandler<Env> = {
 		const context: Context = { env };
 
 		return router
-			.config({ context })
+			.setConfig({ context })
 			.match(request);
 	}
 };
