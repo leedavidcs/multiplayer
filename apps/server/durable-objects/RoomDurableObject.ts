@@ -16,7 +16,7 @@ interface Context {
 const multiplayer = createMultiplayer<Context>().usePlatform(platformCloudflare());
 
 const router = createRouter<Context>()
-	.path("/websocket", (__, { context: { env }, request }) => {
+	.path("post", "/websocket", (__, { context: { env }, request }) => {
 		if (!RequestUtils.isWebSocketRequest(request)) {
 			return new Response("Expected websocket", { status: 400 });
 		}

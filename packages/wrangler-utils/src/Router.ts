@@ -35,18 +35,50 @@ type RouterPathRecord<
 	TPathParams extends PathParams<TPathName>
 > = Record<TPathName, RouterPathHandler<TContext, Id<TPathParams>>>;
 
+type RouterMethod =
+	| "connect"
+	| "delete"
+	| "get"
+	| "head"
+	| "options"
+	| "patch"
+	| "post"
+	| "put"
+	| "trace";
+
+type RouterPathTuple<
+	TContext,
+	TMethod extends RouterMethod,
+	TPathName extends string,
+	TPathParams extends PathParams<TPathName>
+> = readonly [
+	method: TMethod,
+	path: TPathName,
+	handler: RouterPathHandler<TContext, Id<TPathParams>>
+];
+
+type RouterPaths<
+	TContext,
+	TMethod extends RouterMethod,
+	TPathName extends string,
+	TPathParams extends PathParams<TPathName>
+> = readonly RouterPathTuple<TContext, TMethod, TPathName, TPathParams>[];
+
 export interface RouterConfigOptions<TContext> {
 	context: TContext;
 }
 
 export interface RouterOptions<
 	TContext,
-	TPaths extends RouterPathRecord<TContext, string, any>
+	TPaths extends RouterPaths<TContext, any, string, any>
 > {
 	paths?: TPaths;
 }
 
-export class Router<TContext, TPaths extends RouterPathRecord<TContext, string, any> = {}> {
+export class Router<
+	TContext,
+	TPaths extends RouterPaths<TContext, any, string, any> = []
+> {
 	private _config: RouterConfigOptions<TContext> | null = null;
 	
 	/**
@@ -81,19 +113,20 @@ export class Router<TContext, TPaths extends RouterPathRecord<TContext, string, 
 		}
 
 		const url = new URL(request.url);
-		const patterns = Object.keys(this.paths);
-		const matchedPattern = patterns.find((pattern) => !!match(pattern)(url.pathname));
 
-		if (!matchedPattern) return new Response("Not found", { status: 404 });
+		const matchedPath = this.paths.find(([method, pattern]) => {
+			return request.method === method && !!match(pattern)(url.pathname);
+		});
+
+		if (!matchedPath) return new Response("Not found", { status: 404 });
+
+		const [, matchedPattern, handler] = matchedPath;
 
 		const matched = match(matchedPattern)(url.pathname);
 
 		if (!matched) return new Response("Not found", { status: 404 });
 
-		const handler = this.paths[matchedPattern];
 		const params = matched.params;
-
-		if (!handler) return new Response("Not found", { status: 404 });
 
 		return await handler(params, {
 			context: this._config.context,
@@ -103,12 +136,12 @@ export class Router<TContext, TPaths extends RouterPathRecord<TContext, string, 
 
 	public static merge<
 		TContextStatic,
-		TPathsStatic1 extends RouterPathRecord<TContextStatic, string, any>,
-		TPathsStatic2 extends RouterPathRecord<TContextStatic, string, any>
+		TPathsStatic1 extends RouterPaths<TContextStatic, any, string, any>,
+		TPathsStatic2 extends RouterPaths<TContextStatic, any, string, any>
 	>(
 		router1: Router<TContextStatic, TPathsStatic1>,
 		router2: Router<TContextStatic, TPathsStatic2>
-	): Router<TContextStatic, Spread<[TPathsStatic1, TPathsStatic2]>> {
+	): Router<TContextStatic, [...TPathsStatic1, ...TPathsStatic2]> {
 		const paths1 = router1.paths;
 		const paths2 = router2.paths;
 
@@ -118,19 +151,26 @@ export class Router<TContext, TPaths extends RouterPathRecord<TContext, string, 
 		 * @author David Lee
 		 * @date August 8, 2022
 		 */
-		return new Router({ paths: { ...paths1, ...paths2 } as any });
+		return new Router({ paths: [...paths1, ...paths2] });
 	}
 
-	public path<TPath extends string>(
+	public path<TMethod extends RouterMethod, TPath extends string>(
+		method: TMethod,
 		pattern: TPath,
 		handler: RouterPathHandler<TContext, Id<PathParams<TPath>>>
-	): Router<TContext, Spread<[TPaths, RouterPathRecord<TContext, TPath, PathParams<TPath>>]>> {
-		const newPath = { [pattern]: handler } as RouterPathRecord<TContext, TPath, PathParams<TPath>>;
+	): Router<TContext, [...TPaths, ...RouterPaths<TContext, TMethod, TPath, PathParams<TPath>>]> {
+		const newPath = [
+			[method, pattern, handler]
+		] as RouterPaths<TContext, TMethod, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
 	}
 }
 
-export const createRouter = <TContext = {}>(): Router<TContext, {}> => {
+export const createRouter = <TContext = {}>(): Router<TContext, []> => {
 	return new Router<TContext>();
 };
+
+const router = createRouter<{}>()
+	.path("get", "/test/:rest*", (params) => undefined)
+	.path("post", "/api/:name/:rest+", (params) => undefined);
