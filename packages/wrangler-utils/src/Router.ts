@@ -36,6 +36,7 @@ type RouterPathRecord<
 > = Record<TPathName, RouterPathHandler<TContext, Id<TPathParams>>>;
 
 type RouterMethod =
+	| "all"
 	| "connect"
 	| "delete"
 	| "get"
@@ -115,8 +116,9 @@ export class Router<
 		const url = new URL(request.url);
 
 		const matchedPath = this.paths.find(([method, pattern]) => {
-			return this._compareMethods(request.method, method)
-				&& !!match(pattern)(url.pathname);
+			const isMethodMatch = this._compareMethods(request.method, method) || method === "all";
+
+			return isMethodMatch && !!match(pattern)(url.pathname);
 		});
 
 		if (!matchedPath) return new Response("Not found", { status: 404 });
@@ -175,7 +177,3 @@ export class Router<
 export const createRouter = <TContext = {}>(): Router<TContext, []> => {
 	return new Router<TContext>();
 };
-
-const router = createRouter<{}>()
-	.path("get", "/test/:rest*", (params) => undefined)
-	.path("post", "/api/:name/:rest+", (params) => undefined);

@@ -7,18 +7,14 @@ interface Context {
 }
 
 const router = createRouter<Context>()
-	.path("post", "/api/room", async (params, { context: { env }, request }) => {
-		if (request.method !== "POST") {
-			return new Response("Method not allowed", { status: 405 });
-		}
-
+	.path("post", "/api/room", async (params, { context: { env } }) => {
 		const roomId = env.rooms.newUniqueId();
 
 		return new Response(roomId.toString(), {
 			headers: { "access-control-allow-origin": "*" }
 		});
 	})
-	.path("post", "/api/room/:rest*", async ({ rest }, { request, context: { env } }) => {
+	.path("get", "/api/room/:rest*", async ({ rest }, { request, context: { env } }) => {
 		const [name, ...restPath] = rest;
 		const forwardUrl = `/${restPath.join("/")}`;
 
