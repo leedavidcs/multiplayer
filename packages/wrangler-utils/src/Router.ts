@@ -115,8 +115,8 @@ export class Router<
 		const url = new URL(request.url);
 
 		const matchedPath = this.paths.find(([method, pattern]) => {
-			// TODO - Handle case sensitivity (should be case-insensitive)
-			return request.method === method && !!match(pattern)(url.pathname);
+			return this._compareMethods(request.method, method)
+				&& !!match(pattern)(url.pathname);
 		});
 
 		if (!matchedPath) return new Response("Not found", { status: 404 });
@@ -165,6 +165,10 @@ export class Router<
 		] as RouterPaths<TContext, TMethod, TPath, PathParams<TPath>>;
 
 		return Router.merge(this, new Router({ paths: newPath }));
+	}
+
+	private _compareMethods(method1: string, method2: string): boolean {
+		return method1.toLowerCase() === method2.toLowerCase();
 	}
 }
 
