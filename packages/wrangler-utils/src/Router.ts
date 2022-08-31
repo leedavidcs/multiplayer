@@ -115,6 +115,7 @@ export class Router<
 		const url = new URL(request.url);
 
 		const matchedPath = this.paths.find(([method, pattern]) => {
+			// TODO - Handle case sensitivity (should be case-insensitive)
 			return request.method === method && !!match(pattern)(url.pathname);
 		});
 
