@@ -1,10 +1,14 @@
 import { MultiplayerClient } from "@package/multiplayer-client";
 import { useEffect, useState } from "react";
 
-export type LoadClient = MultiplayerClient | (() => MaybePromise<MultiplayerClient>);
+export type LoadClient<
+	TMultiplayer extends MultiplayerClient
+> = TMultiplayer | (() => MaybePromise<TMultiplayer>);
 
-export const useLoadClient = (loader: LoadClient): MultiplayerClient | null => {
-	const [client, setClient] = useState<MultiplayerClient | null>(
+export const useLoadClient = <
+	TMultiplayer extends MultiplayerClient
+>(loader: LoadClient<TMultiplayer>): TMultiplayer | null => {
+	const [client, setClient] = useState<TMultiplayer | null>(
 		loader instanceof MultiplayerClient ? loader : null
 	);
 
