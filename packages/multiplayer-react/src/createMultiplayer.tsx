@@ -1,4 +1,4 @@
-import { Infer, InferEventMessage, MultiplayerClient } from "@package/multiplayer-client";
+import { Infer, MultiplayerClient } from "@package/multiplayer-client";
 import { FC, ReactNode, useContext, useEffect } from "react";
 import { MultiplayerContext } from "./context";
 import { useLoadClient } from "./internal";
