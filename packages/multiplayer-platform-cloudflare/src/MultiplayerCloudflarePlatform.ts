@@ -5,4 +5,8 @@ export class MultiplayerCloudflarePlatform extends AbstractMultiplayerPlatform<W
 	public convertWebSocket(webSocket: WebSocket): CloudflareWebSocket {
 		return new CloudflareWebSocket(webSocket);
 	}
+
+	public randomUUID(): string {
+		return crypto.randomUUID();
+	}
 }

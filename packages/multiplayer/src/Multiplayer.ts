@@ -210,7 +210,7 @@ export class Multiplayer<
 		multiplayerWs.accept();
 
 		const session: WebSocketSession = {
-			id: crypto.randomUUID(),
+			id: this.platform.randomUUID(),
 			quit: false,
 			webSocket: multiplayerWs
 		};

@@ -7,4 +7,6 @@ export type InferWebSocketType<TPlatform extends Maybe<AbstractMultiplayerPlatfo
 
 export abstract class AbstractMultiplayerPlatform<TWebSocket = any> {
 	public abstract convertWebSocket(webSocket: TWebSocket): AbstractWebSocket;
+
+	public abstract randomUUID(): string;
 }
