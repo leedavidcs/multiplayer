@@ -192,6 +192,25 @@ importers:
       '@package/typings': link:../typings
       typescript: 4.8.2
 
+  packages/multiplayer-react:
+    specifiers:
+      '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer-client': workspace:*
+      '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
+      '@types/react': 18.0.18
+      react: 18.2.0
+      typescript: ^4.8.2
+    dependencies:
+      '@package/multiplayer-client': link:../multiplayer-client
+      '@types/react': 18.0.18
+      react: 18.2.0
+    devDependencies:
+      '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/tsconfig': link:../tsconfig
+      '@package/typings': link:../typings
+      typescript: 4.8.2
+
   packages/tsconfig:
     specifiers: {}
 
