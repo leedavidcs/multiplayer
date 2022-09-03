@@ -7,11 +7,11 @@
 	"sideEffects": false,
 	"dependencies": {
 		"@package/common-utils": "workspace:*",
+		"@package/multiplayer-internal": "workspace:*",
 		"immer": "^9.0.15"
 	},
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",
-		"@package/multiplayer-internal": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
 		"typescript": "^4.8.2"

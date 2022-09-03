@@ -68,6 +68,25 @@ importers:
       next-transpile-modules: 9.0.0
       typescript: 4.8.2
 
+  packages/app-multiplayer:
+    specifiers:
+      '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer': workspace:*
+      '@package/multiplayer-client': workspace:*
+      '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
+      immer: ^9.0.15
+      typescript: ^4.8.2
+    dependencies:
+      '@package/multiplayer': link:../multiplayer
+      '@package/multiplayer-client': link:../multiplayer-client
+      immer: 9.0.15
+    devDependencies:
+      '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/tsconfig': link:../tsconfig
+      '@package/typings': link:../typings
+      typescript: 4.8.2
+
   packages/common-utils:
     specifiers:
       '@package/eslint-config-custom': workspace:*
@@ -128,10 +147,10 @@ importers:
       typescript: ^4.8.2
     dependencies:
       '@package/common-utils': link:../common-utils
+      '@package/multiplayer-internal': link:../multiplayer-internal
       immer: 9.0.15
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
-      '@package/multiplayer-internal': link:../multiplayer-internal
       '@package/tsconfig': link:../tsconfig
       '@package/typings': link:../typings
       typescript: 4.8.2
