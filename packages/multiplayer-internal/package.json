@@ -9,6 +9,6 @@
 		"@package/eslint-config-custom": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
-		"typescript": "^4.7.4"
+		"typescript": "^4.8.2"
 	}
 }
