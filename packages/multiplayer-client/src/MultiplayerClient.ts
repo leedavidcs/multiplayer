@@ -215,12 +215,12 @@ export class MultiplayerClient<
 }
 
 export interface CreateMultiplayerClientOptions {
-	apiEndpoint: string | (() => MaybePromise<string>);
+	apiEndpoint?: string | (() => MaybePromise<string>);
 	debug?: boolean;
 }
 
 export const createClient = (
-	options: CreateMultiplayerClientOptions
+	options: CreateMultiplayerClientOptions = {}
 ): MultiplayerClient<{}, DefaultServerEventRecord> => {
 	return new MultiplayerClient<{}, DefaultServerEventRecord>(options);
 };
