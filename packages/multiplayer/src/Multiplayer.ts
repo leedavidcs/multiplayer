@@ -319,7 +319,7 @@ export class Multiplayer<
 	}
 }
 
-export const createMultiplayer = <
+export const createServer = <
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
 >(): Multiplayer<null, TContext, TOutput, DefaultClientEventRecord> => {

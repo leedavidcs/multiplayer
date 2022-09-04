@@ -1,5 +1,5 @@
 import { ms } from "@package/common-utils";
-import { createMultiplayer } from "@package/multiplayer";
+import { createServer } from "@package/multiplayer";
 import { platformCloudflare } from "@package/multiplayer-platform-cloudflare";
 import {
 	createRouter,
@@ -13,7 +13,7 @@ interface Context {
 	storage: DurableObjectStorage;
 }
 
-const multiplayer = createMultiplayer<Context>().usePlatform(platformCloudflare());
+const multiplayer = createServer<Context>().usePlatform(platformCloudflare());
 
 const router = createRouter<Context>()
 	.path("post", "/websocket", (__, { context: { env }, request }) => {
