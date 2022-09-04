@@ -1,5 +1,6 @@
 import { ObjectUtils, TypedEvent } from "@package/common-utils";
 import {
+	DefaultServerEventRecord,
 	EventData,
 	EventRecord,
 	InferEventMessage,
@@ -138,6 +139,12 @@ export class MultiplayerClient<
 		return this._webSocket.reconnect();
 	}
 
+	public useBroadcastType<
+		TNewInput extends EventRecord<string, any> = {}
+	>(): MultiplayerClient<TOutput, TNewInput> {
+		return this as any;
+	}
+
 	private _logDebug(...data: any[]): void {
 		this._debug && console.log(data);
 	}
@@ -177,6 +184,6 @@ export interface CreateMultiplayerClientOptions {
 
 export const createClient = <TOutput extends EventRecord<string, any> = {}>(
 	options: CreateMultiplayerClientOptions
-): MultiplayerClient<TOutput, {}> => {
-	return new MultiplayerClient<TOutput, {}>(options);
+): MultiplayerClient<TOutput, DefaultServerEventRecord> => {
+	return new MultiplayerClient<TOutput, DefaultServerEventRecord>(options);
 };
