@@ -1,4 +1,5 @@
 export type {
+	DefaultClientEventRecord,
 	EventData,
 	EventMessage,
 	EventRecord,
