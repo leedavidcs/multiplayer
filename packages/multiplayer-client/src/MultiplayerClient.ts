@@ -23,10 +23,20 @@ export type InferEventConfig<
 		: never;
 };
 
+export interface MultiplayerClientConfigOptions {
+	apiEndpoint: string | (() => MaybePromise<string>);
+	debug?: boolean;
+}
+
+interface InternalConfig {
+	apiEndpoint?: string | (() => MaybePromise<string>);
+	debug?: boolean;
+}
+
 export interface MultiplayerClientOptions<
 	TEvents extends EventRecord<string, any> = {}
 > {
-	apiEndpoint: string | (() => MaybePromise<string>);
+	apiEndpoint?: string | (() => MaybePromise<string>);
 	debug?: boolean;
 	events?: InferEventConfig<TEvents>;
 }
@@ -45,23 +55,24 @@ export class MultiplayerClient<
 		input: TInput;
 	} = {} as any;
 
-	public apiEndpoint: string | (() => MaybePromise<string>);
-	public events: InferEventConfig<TInput>;
+	readonly _events: InferEventConfig<TInput>;
 
-	private _debug: boolean;
+	private _config: InternalConfig;
 	private _webSocket: WebSocketManager<TOutput>;
 
 	constructor(options: MultiplayerClientOptions<TInput>) {
 		super();
 
-		this._debug = options.debug ?? false;
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug,
+		};
 
-		this.apiEndpoint = options.apiEndpoint;
-		this.events = options.events ?? {} as InferEventConfig<TInput>;
+		this._events = options.events ?? {} as InferEventConfig<TInput>;
 
 		this._webSocket = new WebSocketManager<TOutput>({
-			apiEndpoint: this.apiEndpoint,
-			debug: options.debug,
+			apiEndpoint: this._config.apiEndpoint,
+			debug: this._config.debug,
 			onMessage: (message) => {
 				const rawMessage = this._parseMessage(message);
 
@@ -78,11 +89,33 @@ export class MultiplayerClient<
 		return this._webSocket.broadcast(message);
 	}
 
+	public config(options: MultiplayerClientConfigOptions): this {
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		};
+
+		this._webSocket.config({
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		});
+
+		return this;
+	}
+
 	public connect(): Promise<void> {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		return this._webSocket.connect();
 	}
 
 	public disconnect(): void {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		return this._webSocket.disconnect();
 	}
 
@@ -110,7 +143,7 @@ export class MultiplayerClient<
 		return MultiplayerClient.merge(
 			this,
 			new MultiplayerClient({
-				apiEndpoint: this.apiEndpoint,
+				apiEndpoint: this._config.apiEndpoint,
 				events: newEvent
 			})
 		);
@@ -124,18 +157,22 @@ export class MultiplayerClient<
 		multiplayer1: MultiplayerClient<TOutputStatic, TInputStatic1>,
 		multiplayer2: MultiplayerClient<TOutputStatic, TInputStatic2>
 	): MultiplayerClient<TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
-		const events1 = multiplayer1.events;
-		const events2 = multiplayer2.events;
+		const events1 = multiplayer1._events;
+		const events2 = multiplayer2._events;
 
 		const mergedEvents = ObjectUtils.safeAssign(events1, events2);
 
 		return new MultiplayerClient({
-			apiEndpoint: multiplayer1.apiEndpoint,
+			apiEndpoint: multiplayer1._config.apiEndpoint,
 			events: mergedEvents as any
 		});
 	}
 
 	public reconnect(): Promise<void> {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		return this._webSocket.reconnect();
 	}
 
@@ -146,7 +183,7 @@ export class MultiplayerClient<
 	}
 
 	private _logDebug(...data: any[]): void {
-		this._debug && console.log(data);
+		this._config.debug && console.log(data);
 	}
 
 	private _parseMessage(
@@ -156,7 +193,7 @@ export class MultiplayerClient<
 
 		if (!rawMessage) return null;
 
-		const eventConfig = this.events[rawMessage.type] ?? null;
+		const eventConfig = this._events[rawMessage.type] ?? null;
 
 		if (!eventConfig) return null;
 

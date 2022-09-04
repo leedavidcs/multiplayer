@@ -36,8 +36,23 @@ export interface WebSocketState {
 	webSocket: WebSocket | null;
 }
 
-export interface WebSocketManagerConfig {
+export interface WebSocketManagerConfigOptions {
 	apiEndpoint: string | (() => MaybePromise<string>);
+	debug?: boolean;
+}
+
+interface InternalConfig {
+	apiEndpoint?: string | (() => MaybePromise<string>);
+	debug?: boolean;
+}
+
+interface InternalListeners {
+	onChange?: (state: WebSocketState) => void;
+	onMessage?: (message: MessageEvent<string>) => void;
+}
+
+export interface WebSocketManagerOptions {
+	apiEndpoint?: string | (() => MaybePromise<string>);
 	debug?: boolean;
 	onChange?: (state: WebSocketState) => void;
 	onMessage?: (message: MessageEvent<string>) => void;
@@ -47,10 +62,11 @@ export interface WebSocketManagerConfig {
 export class WebSocketManager<
 	TOutput extends EventRecord<string, any> = {}
 > {
-	private _config: WebSocketManagerConfig;
+	private _config: InternalConfig;
 	private _intervals: IntervalIds = {
 		heartbeat: null
 	};
+	private _listeners: InternalListeners;
 	private _state: WebSocketState = {
 		connection: {
 			state: ConnectionState.Closed
@@ -62,8 +78,16 @@ export class WebSocketManager<
 	};
 	private _wsListeners: WebSocketListeners | null = null;
 
-	constructor(config: WebSocketManagerConfig) {
-		this._config = config;
+	constructor(options: WebSocketManagerOptions) {
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug,
+		};
+
+		this._listeners = {
+			onChange: options.onChange,
+			onMessage: options.onMessage
+		};
 	}
 
 	public get connection(): WebSocketConnection {
@@ -82,7 +106,20 @@ export class WebSocketManager<
 		this._sendMessage(this._state.webSocket, message);
 	}
 
+	public config(options: WebSocketManagerConfigOptions): this {
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		};
+
+		return this;
+	}
+
 	public async connect(): Promise<void> {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		// Consider memoizing apiEndpoint as a private property, to avoid recomputing
 		// this, and what kind of impact memoizing would have on things such as auth
 		const apiEndpoint = typeof this._config.apiEndpoint === "string"
@@ -102,6 +139,10 @@ export class WebSocketManager<
 	}
 
 	public disconnect(): void {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		if (!this._state.webSocket) return;
 
 		this._closeWs();
@@ -115,6 +156,10 @@ export class WebSocketManager<
 	}
 
 	public async reconnect(): Promise<void> {
+		if (!this._config.apiEndpoint) {
+			throw new Error("Must provide an apiEndpoint.");
+		}
+
 		if (!this._state.webSocket)return;
 
 		this._closeWs();
@@ -214,7 +259,7 @@ export class WebSocketManager<
 	private _onError(): void {}
 
 	private _onMessage(message: MessageEvent<string>): void {
-		this._config.onMessage?.(message);
+		this._listeners.onMessage?.(message);
 	}
 
 	private _onOpen(): void {
@@ -245,7 +290,7 @@ export class WebSocketManager<
 
 		this._state = newState;
 
-		this._config.onChange?.(newState);
+		this._listeners.onChange?.(newState);
 
 		return newState;
 	}
