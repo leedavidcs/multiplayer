@@ -177,8 +177,8 @@ export class MultiplayerClient<
 	}
 
 	public useBroadcastType<
-		TNewInput extends EventRecord<string, any> = {}
-	>(): MultiplayerClient<TOutput, TNewInput> {
+		TNewOutput extends EventRecord<string, any> = {}
+	>(): MultiplayerClient<TNewOutput, TInput> {
 		return this as any;
 	}
 
