@@ -182,8 +182,8 @@ export interface CreateMultiplayerClientOptions {
 	debug?: boolean;
 }
 
-export const createClient = <TOutput extends EventRecord<string, any> = {}>(
+export const createClient = (
 	options: CreateMultiplayerClientOptions
-): MultiplayerClient<TOutput, DefaultServerEventRecord> => {
-	return new MultiplayerClient<TOutput, DefaultServerEventRecord>(options);
+): MultiplayerClient<{}, DefaultServerEventRecord> => {
+	return new MultiplayerClient<{}, DefaultServerEventRecord>(options);
 };
