@@ -2,13 +2,16 @@
 	"name": "@package/app-multiplayer",
 	"version": "0.0.0",
 	"private": true,
-	"main": "src/index.ts",
-	"types": "src/index.ts",
+	"files": [
+		"client.ts",
+		"server.ts"
+	],
 	"sideEffects": false,
 	"dependencies": {
 		"@package/multiplayer": "workspace:*",
 		"@package/multiplayer-client": "workspace:*",
-		"immer": "^9.0.15"
+		"@package/multiplayer-platform-cloudflare": "workspace:*",
+		"zod": "^3.18.0"
 	},
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",

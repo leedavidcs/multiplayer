@@ -73,14 +73,16 @@ importers:
       '@package/eslint-config-custom': workspace:*
       '@package/multiplayer': workspace:*
       '@package/multiplayer-client': workspace:*
+      '@package/multiplayer-platform-cloudflare': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
-      immer: ^9.0.15
       typescript: ^4.8.2
+      zod: ^3.18.0
     dependencies:
       '@package/multiplayer': link:../multiplayer
       '@package/multiplayer-client': link:../multiplayer-client
-      immer: 9.0.15
+      '@package/multiplayer-platform-cloudflare': link:../multiplayer-platform-cloudflare
+      zod: 3.18.0
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/tsconfig': link:../tsconfig

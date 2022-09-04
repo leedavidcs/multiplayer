@@ -5,7 +5,7 @@
 		"**/*.ts"
 	],
 	"compilerOptions": {
-		"baseUrl": "./src",
+		"baseUrl": ".",
 		"types": ["types.d.ts"]
 	}
 }
