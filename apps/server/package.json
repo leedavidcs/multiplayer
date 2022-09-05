@@ -8,10 +8,8 @@
 		"wrangler": "wrangler"
 	},
 	"dependencies": {
+		"@package/app-multiplayer": "workspace:*",
 		"@package/common-utils": "workspace:*",
-		"@package/multiplayer": "workspace:*",
-		"@package/multiplayer-internal": "workspace:*",
-		"@package/multiplayer-platform-cloudflare": "workspace:*",
 		"zod": "^3.18.0"
 	},
 	"devDependencies": {

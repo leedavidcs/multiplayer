@@ -1,6 +1,6 @@
 import { createRouter, DurableObjectUtils } from "@package/wrangler-utils";
 
-export { RoomDurableObject } from "./durable-objects";
+export { RateLimiterDurableObject, RoomDurableObject } from "./durable-objects";
 
 interface Context {
 	env: Env;
@@ -40,3 +40,5 @@ const worker: ExportedHandler<Env> = {
 			.match(request);
 	}
 };
+
+export default worker;

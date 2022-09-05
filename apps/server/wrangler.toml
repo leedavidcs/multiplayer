@@ -1,3 +1,13 @@
 name = "multiplayer-server"
 main = "src/index.ts"
 compatibility_date = "2022-08-03"
+
+[durable_objects]
+bindings = [
+	{ name = "limiters", class_name = "RateLimiterDurableObject" },
+	{ name = "rooms", class_name = "RoomDurableObject" },
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RateLimiterDurableObject", "RoomDurableObject"]
