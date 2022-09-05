@@ -43,11 +43,6 @@ export type GetEventMessage<
 	? EventMessage<TEvent, T[TEvent]>
 	: never;
 
-export type Infer<TMultiplayer extends MultiplayerLike<any>> =
-	TMultiplayer extends MultiplayerLike<infer TInput>
-		? TInput
-		: never;
-
 export type InferEventMessage<
 	TEvents extends EventRecord<string, any>
 > = {
@@ -56,13 +51,27 @@ export type InferEventMessage<
 		: never;
 }[keyof TEvents];
 
+export type InferInput<TMultiplayer extends MultiplayerLike<any>> =
+	TMultiplayer extends MultiplayerLike<infer TInput>
+		? TInput
+		: never;
+
+export type InferOutput<TMultiplayer extends MultiplayerLike<any>> =
+	TMultiplayer extends MultiplayerLike<any, infer TOutput>
+		? TOutput
+		: never;
+
 export type InputZodLike<TData extends EventData> = {
 	_input: TData;
 	parse: (data: unknown) => TData;
 }
 
-export interface MultiplayerLike<TInput extends EventRecord<string, any> = {}> {
+export interface MultiplayerLike<
+	TInput extends EventRecord<string, any> = {},
+	TOutput extends EventRecord<string, any> = {}
+> {
 	_def: {
 		input: TInput;
+		output: TOutput;
 	};
 }

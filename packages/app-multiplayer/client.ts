@@ -1,4 +1,4 @@
-import { createClient, Infer } from "@package/multiplayer-client";
+import { createClient, InferInput } from "@package/multiplayer-client";
 import { z }from "zod";
 import type { MultiplayerServerInput } from "./server";
 
@@ -12,4 +12,4 @@ const _multiplayerClient = createClient()
 export const multiplayerClient = _multiplayerClient
 	.useBroadcastType<MultiplayerServerInput>();
 
-export type MultiplayerClientInput = Infer<typeof _multiplayerClient>;
+export type MultiplayerClientInput = InferInput<typeof _multiplayerClient>;

@@ -1,4 +1,4 @@
-import { createServer, Infer } from "@package/multiplayer";
+import { createServer, InferInput } from "@package/multiplayer";
 import { platformCloudflare } from "@package/multiplayer-platform-cloudflare";
 import { z } from "zod";
 import type { MultiplayerClientInput } from "./client";
@@ -17,4 +17,4 @@ export const multiplayerServer = createServer<{}, MultiplayerClientInput>()
 		}
 	});
 
-export type MultiplayerServerInput = Infer<typeof multiplayerServer>;
+export type MultiplayerServerInput = InferInput<typeof multiplayerServer>;

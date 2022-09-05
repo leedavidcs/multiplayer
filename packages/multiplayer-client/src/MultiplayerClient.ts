@@ -53,6 +53,7 @@ export class MultiplayerClient<
 	 */
 	readonly _def: {
 		input: TInput;
+		output: TOutput;
 	} = {} as any;
 
 	readonly _events: InferEventConfig<TInput>;

@@ -92,6 +92,7 @@ export class Multiplayer<
 	 */
 	readonly _def: {
 		input: TInput;
+		output: TOutput;
 	} = {} as any;
 
 	private _config: MultiplayerConfigOptions<TContext> | null = null;

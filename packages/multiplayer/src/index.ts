@@ -3,8 +3,9 @@ export type {
 	EventData,
 	EventMessage,
 	EventRecord,
-	Infer,
 	InferEventMessage,
+	InferInput,
+	InferOutput,
 } from "@package/multiplayer-internal";
 
 export * from "./AbstractMultiplayerPlatform";
