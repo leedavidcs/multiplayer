@@ -93,7 +93,7 @@ export class Router<
 	public paths: TPaths;
 
 	constructor(options: RouterOptions<TContext, TPaths> = {}) {
-		this.paths = options.paths ?? {} as TPaths;
+		this.paths = options.paths ?? [] as any;
 	}
 
 	public async match(request: Request): Promise<Response> {
