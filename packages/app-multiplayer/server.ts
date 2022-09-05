@@ -3,6 +3,8 @@ import { platformCloudflare } from "@package/multiplayer-platform-cloudflare";
 import { z } from "zod";
 import type { MultiplayerClientInput } from "./client";
 
+export * from "@package/multiplayer";
+
 export const multiplayerServer = createServer<{}, MultiplayerClientInput>()
 	.usePlatform(platformCloudflare())
 	.event("SEND_MESSAGE", {

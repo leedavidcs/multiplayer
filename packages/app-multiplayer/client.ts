@@ -2,6 +2,8 @@ import { createClient, InferInput } from "@package/multiplayer-client";
 import { z }from "zod";
 import type { MultiplayerServerInput } from "./server";
 
+export * from "@package/multiplayer-client";
+
 const _multiplayerClient = createClient()
 	.event("RECEIVE_MESSAGE", {
 		input: z.object({

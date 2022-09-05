@@ -10,6 +10,7 @@
 	"dependencies": {
 		"@package/app-multiplayer": "workspace:*",
 		"@package/common-utils": "workspace:*",
+		"@package/multiplayer-react": "workspace:*",
 		"zod": "^3.18.0"
 	},
 	"devDependencies": {

@@ -18,6 +18,7 @@ importers:
       '@package/app-multiplayer': workspace:*
       '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer-react': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       '@package/wrangler-utils': workspace:*
@@ -27,6 +28,7 @@ importers:
     dependencies:
       '@package/app-multiplayer': link:../../packages/app-multiplayer
       '@package/common-utils': link:../../packages/common-utils
+      '@package/multiplayer-react': link:../../packages/multiplayer-react
       zod: 3.18.0
     devDependencies:
       '@cloudflare/workers-types': 3.16.0
@@ -40,8 +42,11 @@ importers:
   apps/web:
     specifiers:
       '@babel/core': ^7.18.13
+      '@package/app-multiplayer': workspace:*
       '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer-react': workspace:*
       '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
       '@types/node': ^18.7.14
       '@types/react': 18.0.18
       eslint: 8.23.0
@@ -51,6 +56,8 @@ importers:
       react-dom: 18.2.0
       typescript: ^4.8.2
     dependencies:
+      '@package/app-multiplayer': link:../../packages/app-multiplayer
+      '@package/multiplayer-react': link:../../packages/multiplayer-react
       '@types/node': 18.7.14
       '@types/react': 18.0.18
       next: 12.2.5_rlaikcoslzwwtqyk7brpdzej5y
@@ -60,6 +67,7 @@ importers:
       '@babel/core': 7.18.13
       '@package/eslint-config-custom': link:../../packages/eslint-config-custom
       '@package/tsconfig': link:../../packages/tsconfig
+      '@package/typings': link:../../packages/typings
       eslint: 8.23.0
       next-transpile-modules: 9.0.0
       typescript: 4.8.2
