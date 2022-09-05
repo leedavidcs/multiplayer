@@ -1,5 +1,5 @@
-import { Infer, MultiplayerClient } from "@package/multiplayer-client";
-import { FC, ReactNode, useContext, useEffect } from "react";
+import { InferEventMessage, InferInput, InferOutput, MultiplayerClient } from "@package/multiplayer-client";
+import { FC, ReactNode, useCallback, useContext, useEffect } from "react";
 import { MultiplayerContext } from "./context";
 import { useLoadClient } from "./internal";
 
@@ -20,9 +20,12 @@ export interface CreateMultiplayerResult<TMultiplayer extends MultiplayerClient<
 	MultiplayerProvider: FC<MultiplayerProviderProps>;
 
 	// hooks
-	useEvent: <TType extends keyof Infer<TMultiplayer>>(
+	useBroadcast: <
+		TMessage extends InferEventMessage<InferOutput<TMultiplayer>>
+	>() => ((message: TMessage) => void)
+	useEvent: <TType extends keyof InferInput<TMultiplayer>>(
 		type: TType,
-		callback: (data: Infer<TMultiplayer>[TType]) => void
+		callback: (data: InferInput<TMultiplayer>[TType]) => void
 	) => void;
 	useMultiplayerClient: () => UseMultiplayerClient<TMultiplayer>;
 }
@@ -48,9 +51,23 @@ export const createMultiplayer = <TMultiplayer extends MultiplayerClient<any, an
 			: { loading: false, client: client as TMultiplayer };
 	};
 
-	const useEvent = <TType extends keyof Infer<TMultiplayer>>(
+	const useBroadcast = <
+		TMessage extends InferEventMessage<InferOutput<TMultiplayer>>
+	>(): ((message: TMessage) => void) => {
+		const { client, loading } = useMultiplayerClient();
+
+		return useCallback((message: TMessage) => {
+			if (loading) {
+				throw new Error("Client is still loading. Message could not be sent.");
+			}
+
+			client.broadcast(message);
+		}, [client, loading]);
+	};
+
+	const useEvent = <TType extends keyof InferInput<TMultiplayer>>(
 		type: TType,
-		callback: (data: Infer<TMultiplayer>[TType]) => void
+		callback: (data: InferInput<TMultiplayer>[TType]) => void
 	): void => {
 		const { client, loading } = useMultiplayerClient();
 
@@ -70,6 +87,7 @@ export const createMultiplayer = <TMultiplayer extends MultiplayerClient<any, an
 		MultiplayerProvider,
 
 		// hooks
+		useBroadcast,
 		useEvent,
 		useMultiplayerClient
 	};
