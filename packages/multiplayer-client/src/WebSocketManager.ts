@@ -106,15 +106,6 @@ export class WebSocketManager<
 		this._sendMessage(this._state.webSocket, message);
 	}
 
-	public config(options: WebSocketManagerConfigOptions): this {
-		this._config = {
-			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
-		};
-
-		return this;
-	}
-
 	public async connect(): Promise<void> {
 		if (!this._config.apiEndpoint) {
 			throw new Error("Must provide an apiEndpoint.");
@@ -172,6 +163,15 @@ export class WebSocketManager<
 		});
 
 		await this.connect();
+	}
+
+	public setConfig(options: WebSocketManagerConfigOptions): this {
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		};
+
+		return this;
 	}
 
 	private _attachWsListeners(): void {

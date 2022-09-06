@@ -196,7 +196,7 @@ export class Multiplayer<
 	): void {
 		if (!this._config) {
 			throw new Error(
-				"Must call \"config\" before registering a new WebSocket."
+				"Must call \"setConfig\" before registering a new WebSocket."
 			);
 		}
 

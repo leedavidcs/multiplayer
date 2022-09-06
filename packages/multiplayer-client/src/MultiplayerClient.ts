@@ -90,20 +90,6 @@ export class MultiplayerClient<
 		return this._webSocket.broadcast(message);
 	}
 
-	public config(options: MultiplayerClientConfigOptions): this {
-		this._config = {
-			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
-		};
-
-		this._webSocket.config({
-			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
-		});
-
-		return this;
-	}
-
 	public connect(): Promise<void> {
 		if (!this._config.apiEndpoint) {
 			throw new Error("Must provide an apiEndpoint.");
@@ -175,6 +161,20 @@ export class MultiplayerClient<
 		}
 
 		return this._webSocket.reconnect();
+	}
+
+	public setConfig(options: MultiplayerClientConfigOptions): this {
+		this._config = {
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		};
+
+		this._webSocket.setConfig({
+			apiEndpoint: options.apiEndpoint,
+			debug: options.debug
+		});
+
+		return this;
 	}
 
 	public useBroadcastType<
