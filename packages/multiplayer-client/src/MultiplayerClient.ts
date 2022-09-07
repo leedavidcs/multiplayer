@@ -9,7 +9,7 @@ import {
 	MultiplayerLike
 } from "@package/multiplayer-internal";
 import { MultiplayerEventTarget } from "./MultiplayerEventTarget";
-import { WebSocketManager } from "./WebSocketManager";
+import { ConnectionState, WebSocketManager } from "./WebSocketManager";
 
 export interface EventConfig<TData extends EventData = {}> {
 	input?: InputZodLike<TData>;
@@ -56,9 +56,9 @@ export class MultiplayerClient<
 		output: TOutput;
 	} = {} as any;
 
+	readonly _config: InternalConfig;
 	readonly _events: InferEventConfig<TInput>;
 
-	private _config: InternalConfig;
 	private _webSocket: WebSocketManager<TOutput>;
 
 	constructor(options: MultiplayerClientOptions<TInput>) {
@@ -163,18 +163,18 @@ export class MultiplayerClient<
 		return this._webSocket.reconnect();
 	}
 
-	public setConfig(options: MultiplayerClientConfigOptions): this {
-		this._config = {
-			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
-		};
+	public setConfig(options: MultiplayerClientConfigOptions): MultiplayerClient<TOutput, TInput> {
+		if (this._webSocket.connection.state !== ConnectionState.Closed) {
+			throw new Error(
+				"Could not setConfig MultiplayerClient. Make sure websocket connections are first closed"
+			);
+		}
 
-		this._webSocket.setConfig({
+		return new MultiplayerClient<TOutput, TInput>({
 			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
+			debug: options.debug,
+			events: this._events,
 		});
-
-		return this;
 	}
 
 	public useBroadcastType<

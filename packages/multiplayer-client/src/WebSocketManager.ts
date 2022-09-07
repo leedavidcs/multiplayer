@@ -62,7 +62,8 @@ export interface WebSocketManagerOptions {
 export class WebSocketManager<
 	TOutput extends EventRecord<string, any> = {}
 > {
-	private _config: InternalConfig;
+	readonly _config: InternalConfig;
+
 	private _intervals: IntervalIds = {
 		heartbeat: null
 	};
@@ -163,15 +164,6 @@ export class WebSocketManager<
 		});
 
 		await this.connect();
-	}
-
-	public setConfig(options: WebSocketManagerConfigOptions): this {
-		this._config = {
-			apiEndpoint: options.apiEndpoint,
-			debug: options.debug
-		};
-
-		return this;
 	}
 
 	private _attachWsListeners(): void {
