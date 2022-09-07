@@ -12,7 +12,13 @@ export const App: NextComponentType<AppContext, AppInitialProps, AppProps> = ({
 			<NextHead>
 				<></>
 			</NextHead>
-			<MultiplayerProvider>
+			{/**
+			 * TODO
+			 * @description Handle api-endpoint room selection eventually
+			 * @author David Lee
+			 * @date September 7, 2022
+			 */}
+			<MultiplayerProvider apiEndpoint="">
 				<Component {...pageProps} />
 			</MultiplayerProvider>
 		</>
