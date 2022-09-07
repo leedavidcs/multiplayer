@@ -9,7 +9,7 @@ import {
 	MultiplayerLike
 } from "@package/multiplayer-internal";
 import { MultiplayerEventTarget } from "./MultiplayerEventTarget";
-import { ConnectionState, WebSocketManager } from "./WebSocketManager";
+import { ConnectionState, WebSocketManager, WebSocketState } from "./WebSocketManager";
 
 export interface EventConfig<TData extends EventData = {}> {
 	input?: InputZodLike<TData>;
@@ -26,6 +26,7 @@ export type InferEventConfig<
 export interface MultiplayerClientConfigOptions {
 	apiEndpoint: string | (() => MaybePromise<string>);
 	debug?: boolean;
+	onConnectionUpdate?: (state: WebSocketState) => void;
 }
 
 interface InternalConfig {
@@ -39,6 +40,7 @@ export interface MultiplayerClientOptions<
 	apiEndpoint?: string | (() => MaybePromise<string>);
 	debug?: boolean;
 	events?: InferEventConfig<TEvents>;
+	onConnectionUpdate?: (state: WebSocketState) => void;
 }
 
 export class MultiplayerClient<
@@ -82,6 +84,9 @@ export class MultiplayerClient<
 				this._logDebug("WebSocket event received: ", rawMessage.type, rawMessage);
 
 				this.dispatchEvent(new TypedEvent(rawMessage.type, rawMessage));
+			},
+			onUpdate: (state) => {
+				options.onConnectionUpdate?.(state);
 			}
 		});
 	}

@@ -47,15 +47,15 @@ interface InternalConfig {
 }
 
 interface InternalListeners {
-	onChange?: (state: WebSocketState) => void;
 	onMessage?: (message: MessageEvent<string>) => void;
+	onUpdate?: (state: WebSocketState) => void;
 }
 
 export interface WebSocketManagerOptions {
 	apiEndpoint?: string | (() => MaybePromise<string>);
 	debug?: boolean;
-	onChange?: (state: WebSocketState) => void;
 	onMessage?: (message: MessageEvent<string>) => void;
+	onUpdate?: (state: WebSocketState) => void;
 }
 
 
@@ -86,8 +86,8 @@ export class WebSocketManager<
 		};
 
 		this._listeners = {
-			onChange: options.onChange,
-			onMessage: options.onMessage
+			onMessage: options.onMessage,
+			onUpdate: options.onUpdate
 		};
 	}
 
@@ -282,7 +282,7 @@ export class WebSocketManager<
 
 		this._state = newState;
 
-		this._listeners.onChange?.(newState);
+		this._listeners.onUpdate?.(newState);
 
 		return newState;
 	}
