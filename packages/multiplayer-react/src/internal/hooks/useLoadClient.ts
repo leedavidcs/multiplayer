@@ -12,7 +12,9 @@ export const useLoadClient = <
 	options: MultiplayerClientConfigOptions
 ): TMultiplayer | null => {
 	const [client, setClient] = useState<TMultiplayer | null>(
-		loader instanceof MultiplayerClient ? loader : null
+		loader instanceof MultiplayerClient
+			? loader.setConfig(options) as TMultiplayer
+			: null
 	);
 
 	if (!loader) {
