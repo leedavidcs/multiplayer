@@ -1,4 +1,4 @@
-import { MultiplayerClient } from "@package/multiplayer-client";
+import { MultiplayerClient, MultiplayerClientConfigOptions } from "@package/multiplayer-client";
 import { useEffect, useState } from "react";
 
 export type LoadClient<
@@ -7,7 +7,10 @@ export type LoadClient<
 
 export const useLoadClient = <
 	TMultiplayer extends MultiplayerClient
->(loader: LoadClient<TMultiplayer>): TMultiplayer | null => {
+>(
+	loader: LoadClient<TMultiplayer>,
+	options: MultiplayerClientConfigOptions
+): TMultiplayer | null => {
 	const [client, setClient] = useState<TMultiplayer | null>(
 		loader instanceof MultiplayerClient ? loader : null
 	);
@@ -21,12 +24,14 @@ export const useLoadClient = <
 
 		// Should not reach here, but handling anyways
 		if (loader instanceof MultiplayerClient) {
-			setClient(loader);
+			setClient(loader.setConfig(options) as TMultiplayer);
 
 			return;
 		}
 
-		Promise.resolve(loader()).then((newClient) => setClient(newClient));
+		Promise.resolve(loader()).then((newClient) => {
+			setClient(newClient.setConfig(options) as TMultiplayer);
+		});
 	}, [loader, !client]);
 
 	return client;

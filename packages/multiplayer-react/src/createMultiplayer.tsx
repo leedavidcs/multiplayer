@@ -1,9 +1,15 @@
-import { InferEventMessage, InferInput, InferOutput, MultiplayerClient } from "@package/multiplayer-client";
+import {
+	InferEventMessage,
+	InferInput,
+	InferOutput,
+	MultiplayerClient,
+	MultiplayerClientConfigOptions
+} from "@package/multiplayer-client";
 import { FC, ReactNode, useCallback, useContext, useEffect } from "react";
 import { MultiplayerContext } from "./context";
-import { useLoadClient } from "./internal";
+import { useLoadClient, useRerender } from "./internal";
 
-export interface MultiplayerProviderProps {
+export interface MultiplayerProviderProps extends MultiplayerClientConfigOptions {
 	children?: ReactNode;
 }
 
@@ -33,8 +39,37 @@ export interface CreateMultiplayerResult<TMultiplayer extends MultiplayerClient<
 export const createMultiplayer = <TMultiplayer extends MultiplayerClient<any, any>>(
 	multiplayer: LoadClient<TMultiplayer>
 ): CreateMultiplayerResult<TMultiplayer> => {
-	const MultiplayerProvider: FC<MultiplayerProviderProps> = ({ children }) => {
-		const client = useLoadClient(multiplayer);
+	const MultiplayerProvider: FC<MultiplayerProviderProps> = (props) => {
+		const { children, onConnectionUpdate, ...options } = props;
+
+		const rerender = useRerender();
+
+		const client = useLoadClient(multiplayer, {
+			onConnectionUpdate: (state) => {
+				rerender();
+
+				onConnectionUpdate?.(state);
+			},
+			...options
+		});
+
+		/**
+		 * TODO
+		 * @description Add loading state to useLoadClient. Return values for client.connection
+		 * and client.webSocket in context.
+		 * @author David Lee
+		 * @date September 7, 2022
+		 */
+
+		useEffect(() => {
+			if (!client) return;
+
+			client.connect();
+
+			return () => {
+				client.disconnect();
+			};
+		}, [client]);
 
 		return (
 			<MultiplayerContext.Provider value={{ client }}>
