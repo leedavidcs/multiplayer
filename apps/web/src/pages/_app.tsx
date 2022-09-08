@@ -18,7 +18,30 @@ export const App: NextComponentType<AppContext, AppInitialProps, AppProps> = ({
 			 * @author David Lee
 			 * @date September 7, 2022
 			 */}
-			<MultiplayerProvider apiEndpoint="">
+			<MultiplayerProvider
+				apiEndpoint={async () => {
+					const response = await fetch("http://localhost:8787/api/room", {
+						method: "post"
+					});
+
+					if (!response.ok) {
+						alert("Something went wrong");
+
+						document.location.reload();
+
+						return;
+					}
+
+					const roomName = await response.text();
+
+					const normalized = roomName
+						.replace(/[^a-zA-Z0-9_-]/g, "")
+						.replace(/_/g, "-")
+						.toLowerCase();
+
+					return `ws://localhost:8787/api/room/${normalized}/websocket`;
+				}}
+			>
 				<Component {...pageProps} />
 			</MultiplayerProvider>
 		</>
