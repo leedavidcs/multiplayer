@@ -229,6 +229,7 @@ export class WebSocketManager<
 	 * @date August 19, 2022
 	 */
 	private _onClose(event: CloseEvent): void {
+		this._logDebug("WebSocket closed");
 		this._logDebug(event.reason);
 
 		clearInterval(this._intervals.heartbeat ?? undefined);
@@ -256,6 +257,8 @@ export class WebSocketManager<
 
 	private _onOpen(): void {
 		if (this._state.connection.state !== ConnectionState.Connecting) return;
+
+		this._logDebug("WebSocket connected");
 
 		this._updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Open;
