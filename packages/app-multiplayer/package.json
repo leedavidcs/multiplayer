@@ -11,12 +11,12 @@
 		"@package/multiplayer": "workspace:*",
 		"@package/multiplayer-client": "workspace:*",
 		"@package/multiplayer-platform-cloudflare": "workspace:*",
-		"zod": "^3.18.0"
+		"zod": "^3.19.0"
 	},
 	"devDependencies": {
 		"@package/eslint-config-custom": "workspace:*",
 		"@package/tsconfig": "workspace:*",
 		"@package/typings": "workspace:*",
-		"typescript": "^4.8.2"
+		"typescript": "^4.8.3"
 	}
 }
