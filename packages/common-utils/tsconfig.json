@@ -5,7 +5,7 @@
 		"**/*.ts"
 	],
 	"compilerOptions": {
-		"lib": ["dom", "es2021"],
+		"lib": ["dom", "dom.iterable", "es2021"],
 		"baseUrl": "./src",
 		"target": "es5",
 		"types": ["types.d.ts"]

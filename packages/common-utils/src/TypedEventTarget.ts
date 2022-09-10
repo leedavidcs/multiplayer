@@ -1,12 +1,4 @@
-export class TypedEvent<T = unknown> extends CustomEvent<T> {
-	constructor(type: string, data: T) {
-		super(type, { detail: data });
-	}
-
-	public get data(): T {
-		return this.detail;
-	}
-}
+import type { TypedEvent } from "./TypedEvent";
 
 export interface TypedEventListener<TEvent extends TypedEvent> extends EventListener {
 	(event: TEvent): void
