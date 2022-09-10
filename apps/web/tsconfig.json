@@ -10,7 +10,13 @@
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "baseUrl": ".",
-    "paths": {},
+    "paths": {
+      "@package/common-utils": ["../../packages/common-utils/src/index"],
+      "@package/multiplayer-client": ["../../packages/multiplayer-client/src/index"],
+      "@package/multiplayer-internal": ["../../packages/multiplayer-internal/src/index"],
+      "@package/app-multiplayer/client": ["../../packages/app-multiplayer/client"],
+      "@package/app-multiplayer/server": ["../../packages/app-multiplayer/server"]
+    },
     "types": ["types.d.ts"]
   }
 }
