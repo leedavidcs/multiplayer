@@ -1,7 +1,6 @@
-import { multiplayerClient } from "@package/app-multiplayer/client";
 import { createMultiplayer } from "@package/multiplayer-react";
 
-const bundle = createMultiplayer(multiplayerClient);
+const bundle = createMultiplayer(() => import("@package/app-multiplayer/client").then((mod) => mod.multiplayerClient));
 
 export const MultiplayerProvider = bundle.MultiplayerProvider;
 export const useBroadcast = bundle.useBroadcast;

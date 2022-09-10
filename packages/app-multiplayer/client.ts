@@ -15,3 +15,5 @@ export const multiplayerClient = _multiplayerClient
 	.useBroadcastType<MultiplayerServerInput>();
 
 export type MultiplayerClientInput = InferInput<typeof _multiplayerClient>;
+
+export default multiplayerClient
