@@ -42,3 +42,5 @@ export const Page: NextPage = () => {
         </div>
     );
 };
+
+export default Page;
