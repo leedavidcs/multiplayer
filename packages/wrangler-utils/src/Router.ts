@@ -99,7 +99,7 @@ export class Router<
 	public async match(request: Request): Promise<Response> {
 		if (!this._config) {
 			throw new Error(
-				"Must call \"config\" before matching a new request."
+				"Must call \"setConfig\" before matching a new request."
 			);
 		}
 
@@ -160,10 +160,6 @@ export class Router<
 	}
 
 	public setConfig(options: RouterConfigOptions<TContext>): Router<TContext, TPaths> {
-		if (this._config) {
-			throw new Error("Router has already been configured");
-		}
-
 		this._config = options;
 
 		return this;
