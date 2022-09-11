@@ -26,13 +26,13 @@ export class UrlUtils {
 	}
 
 	public static preferHttps(url: string): string {
-		return /^(http|wss):\/\/localhost/.test(url)
+		return /^(https?|wss?):\/\/localhost/.test(url)
 			? UrlUtils.ensureHttp(url)
 			: UrlUtils.ensureHttps(url);
 	}
 
 	public static preferWss(url: string): string {
-		return /^(http|wss):\/\/localhost/.test(url)
+		return /^(https?|wss?):\/\/localhost/.test(url)
 			? UrlUtils.ensureWs(url)
 			: UrlUtils.ensureWss(url);
 	}
