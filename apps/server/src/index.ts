@@ -14,22 +14,26 @@ const router = createRouter<Context>()
 			headers: { "access-control-allow-origin": "*" }
 		});
 	})
-	.path("get", "/api/room/:rest*", async ({ rest }, { request, context: { env } }) => {
-		const [name, ...restPath] = rest;
-		const forwardUrl = `/${restPath.join("/")}`;
+	.path(
+		"all",
+		"/api/room/:rest*",
+		async ({ rest }, { request, context: { env } }) => {
+			const [name, ...restPath] = rest;
+			const forwardUrl = `/${restPath.join("/")}`;
 
-		const roomId = DurableObjectUtils.isValidId(name)
-			? env.rooms.idFromString(name)
-			: DurableObjectUtils.isValidName(name)
-			? env.rooms.idFromName(name)
-			: null;
+			const roomId = DurableObjectUtils.isValidId(name)
+				? env.rooms.idFromString(name)
+				: DurableObjectUtils.isValidName(name)
+				? env.rooms.idFromName(name)
+				: null;
 
-		if (!roomId) return new Response("Name too long", { status: 404 });
+			if (!roomId) return new Response("Name too long", { status: 404 });
 
-		const room = env.rooms.get(roomId);
+			const room = env.rooms.get(roomId);
 
-		return room.fetch(forwardUrl, request);
-	});
+			return room.fetch(forwardUrl, request);
+		}
+	);
 
 const worker: ExportedHandler<Env> = {
 	async fetch(request: Request, env: Env): Promise<Response> {
