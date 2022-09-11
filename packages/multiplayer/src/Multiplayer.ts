@@ -304,10 +304,6 @@ export class Multiplayer<
 	public setConfig(
 		options: MultiplayerConfigOptions<TContext>
 	): Multiplayer<TPlatform, TContext, TOutput, TInput> {
-		if (this._config) {
-			throw new Error("Multiplayer has already been configured.");
-		}
-
 		this._config = options;
 
 		return this;

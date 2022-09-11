@@ -41,6 +41,7 @@ export const App: NextComponentType<AppContext, AppInitialProps, AppProps> = ({
 
 					return `ws://localhost:8787/api/room/${normalized}/websocket`;
 				}}
+				debug
 			>
 				<Component {...pageProps} />
 			</MultiplayerProvider>
