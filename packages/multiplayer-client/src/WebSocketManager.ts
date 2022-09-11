@@ -230,7 +230,7 @@ export class WebSocketManager<
 	 */
 	private _onClose(event: CloseEvent): void {
 		this._logDebug("WebSocket closed");
-		this._logDebug(event.reason);
+		!!event.reason && this._logDebug(event.reason);
 
 		clearInterval(this._intervals.heartbeat ?? undefined);
 		clearTimeout(this._timeouts.pong ?? undefined);
