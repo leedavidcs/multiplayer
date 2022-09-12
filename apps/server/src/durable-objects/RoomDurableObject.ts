@@ -13,7 +13,7 @@ interface Context {
 }
 
 const router = createRouter<Context>()
-	.path("post", "/websocket", (__, { context: { env }, request }) => {
+	.path("get", "/websocket", (__, { context: { env }, request }) => {
 		if (!RequestUtils.isWebSocketRequest(request)) {
 			return new Response("Expected websocket", { status: 400 });
 		}

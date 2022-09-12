@@ -15,7 +15,7 @@ const router = createRouter<Context>()
 		});
 	})
 	.path(
-		"all",
+		"get",
 		"/api/room/:rest*",
 		async ({ rest }, { request, context: { env } }) => {
 			const [name, ...restPath] = rest;
