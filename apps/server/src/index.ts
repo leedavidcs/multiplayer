@@ -1,3 +1,4 @@
+import { UrlUtils } from "@package/common-utils";
 import { createRouter, DurableObjectUtils } from "@package/wrangler-utils";
 
 export { RateLimiterDurableObject, RoomDurableObject } from "./durable-objects";
@@ -31,7 +32,7 @@ const router = createRouter<Context>()
 
 			const room = env.rooms.get(roomId);
 
-			return room.fetch(forwardUrl, request);
+			return room.fetch(UrlUtils.relative(request, forwardUrl), request);
 		}
 	);
 

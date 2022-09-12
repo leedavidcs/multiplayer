@@ -1,3 +1,13 @@
+export interface LocationLike {
+	origin: string;
+}
+
+export interface RequestLike {
+	url: string;
+}
+
+export type RelativeRequestLike = LocationLike | RequestLike;
+
 export class UrlUtils {
 	public static ensureHttp(url: string): string {
 		return `http://${UrlUtils.stripProtocol(url)}`;
@@ -37,7 +47,33 @@ export class UrlUtils {
 			: UrlUtils.ensureWss(url);
 	}
 
+	public static relative(req: RelativeRequestLike, path: string): string {
+		const origin: string = UrlUtils._isLocationLike(req)
+			? req.origin
+			: UrlUtils._isRequestLike(req)
+			? req.url
+			: "";
+
+		if (!origin) {
+			return path;
+		}
+
+		const url = new URL(origin);
+
+		url.pathname = `/${path}`;
+
+		return url.toString();
+	}
+
 	public static stripProtocol(url: string): string {
 		return url.replace(/^(wss?|https?):\/\//, "");
+	}
+
+	private static _isLocationLike(req: any): req is LocationLike {
+		return typeof req.origin === "string";
+	}
+
+	private static _isRequestLike(req: any): req is RequestLike {
+		return typeof req.url === "string";
 	}
 }
