@@ -78,7 +78,7 @@ export interface MultiplayerOptions<
 	platform?: TPlatform;
 }
 
-export class Multiplayer<
+export class MultiplayerServer<
 	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
@@ -143,7 +143,7 @@ export class Multiplayer<
 	>(
 		event: TEvent,
 		config: EventConfig<TContext, TOutput, TData>
-	): Multiplayer<
+	): MultiplayerServer<
 		TPlatform,
 		TContext,
 		TOutput,
@@ -160,9 +160,9 @@ export class Multiplayer<
 			[event]: config
 		} as InferEventConfig<TContext, TOutput, EventRecord<TEvent, TData>>;
 
-		return Multiplayer.merge(
+		return MultiplayerServer.merge(
 			this,
-			new Multiplayer({
+			new MultiplayerServer({
 				events: newEvent,
 				platform: this.platform
 			})
@@ -176,15 +176,15 @@ export class Multiplayer<
 		TInputStatic1 extends EventRecord<string, any> = {},
 		TInputStatic2 extends EventRecord<string, any> = {}
 	>(
-		multiplayer1: Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic1>,
-		multiplayer2: Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic2>
-	): Multiplayer<TPlatformStatic, TContextStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
+		multiplayer1: MultiplayerServer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic1>,
+		multiplayer2: MultiplayerServer<TPlatformStatic, TContextStatic, TOutputStatic, TInputStatic2>
+	): MultiplayerServer<TPlatformStatic, TContextStatic, TOutputStatic, Spread<[TInputStatic1, TInputStatic2]>> {
 		const events1 = multiplayer1.events;
 		const events2 = multiplayer2.events;
 
 		const mergedEvents = ObjectUtils.safeAssign(events1, events2);
 
-		return new Multiplayer({
+		return new MultiplayerServer({
 			events: mergedEvents as any,
 			platform: multiplayer1.platform
 		});
@@ -303,7 +303,7 @@ export class Multiplayer<
 
 	public setConfig(
 		options: MultiplayerConfigOptions<TContext>
-	): Multiplayer<TPlatform, TContext, TOutput, TInput> {
+	): MultiplayerServer<TPlatform, TContext, TOutput, TInput> {
 		this._config = options;
 
 		return this;
@@ -311,16 +311,16 @@ export class Multiplayer<
 
 	public usePlatform<
 		TNewPlatform extends AbstractMultiplayerPlatform<any>
-	>(platform: TNewPlatform): Multiplayer<TNewPlatform, TContext, TOutput, TInput> {
-		return new Multiplayer({ events: this.events, platform });
+	>(platform: TNewPlatform): MultiplayerServer<TNewPlatform, TContext, TOutput, TInput> {
+		return new MultiplayerServer({ events: this.events, platform });
 	}
 }
 
 export const createServer = <
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
->(): Multiplayer<null, TContext, TOutput, DefaultClientEventRecord> => {
-	return new Multiplayer<null, TContext, TOutput, DefaultClientEventRecord>({
+>(): MultiplayerServer<null, TContext, TOutput, DefaultClientEventRecord> => {
+	return new MultiplayerServer<null, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
 				resolver: async (data, { session }) => {

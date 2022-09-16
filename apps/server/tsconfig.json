@@ -9,8 +9,8 @@
 		"types": ["types.d.ts"],
 		"paths": {
 			"@package/common-utils": ["../../packages/common-utils/src"],
-			"@package/multiplayer": ["../../packages/multiplayer/src"],
 			"@package/multiplayer-internal": ["../../packages/multiplayer-internal/src"],
+			"@package/multiplayer-server": ["../../packages/multiplayer-server/src"],
 			"@package/wrangler-utils": ["../../packages/wrangler-utils/src"]
 		}
 	}

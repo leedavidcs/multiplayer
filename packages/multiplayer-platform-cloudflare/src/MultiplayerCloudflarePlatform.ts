@@ -1,4 +1,4 @@
-import { AbstractMultiplayerPlatform } from "@package/multiplayer";
+import { AbstractMultiplayerPlatform } from "@package/multiplayer-server";
 import { CloudflareWebSocket } from "./CloudflareWebSocket";
 
 export class MultiplayerCloudflarePlatform extends AbstractMultiplayerPlatform<WebSocket> {

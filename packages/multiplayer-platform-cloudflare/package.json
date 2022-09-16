@@ -10,8 +10,8 @@
 	"sideEffects": false,
 	"dependencies": {
 		"@package/common-utils": "workspace:*",
-		"@package/multiplayer": "workspace:*",
 		"@package/multiplayer-internal": "workspace:*",
+		"@package/multiplayer-server": "workspace:*",
 		"@package/wrangler-utils": "workspace:*"
 	},
 	"devDependencies": {

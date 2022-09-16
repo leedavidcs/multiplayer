@@ -1,4 +1,4 @@
-import { AbstractMultiplayerPlatform, AbstractWebSocket } from "@package/multiplayer";
+import { AbstractMultiplayerPlatform, AbstractWebSocket } from "@package/multiplayer-server";
 import crypto from "crypto";
 import WebSocket from "ws";
 import { NodeWebSocket } from "./NodeWebSocket";

@@ -10,4 +10,4 @@ export type {
 
 export * from "./AbstractMultiplayerPlatform";
 export * from "./AbstractWebSocket";
-export * from "./Multiplayer";
+export * from "./MultiplayerServer";

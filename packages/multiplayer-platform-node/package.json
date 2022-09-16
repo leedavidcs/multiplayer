@@ -7,8 +7,8 @@
 	"sideEffects": false,
 	"dependencies": {
 		"@package/common-utils": "workspace:*",
-		"@package/multiplayer": "workspace:*",
 		"@package/multiplayer-internal": "workspace:*",
+		"@package/multiplayer-server": "workspace:*",
 		"@types/ws": "^8.5.3",
 		"ws": "^8.8.1"
 	},

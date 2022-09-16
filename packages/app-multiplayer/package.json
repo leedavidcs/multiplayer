@@ -8,9 +8,9 @@
 	],
 	"sideEffects": false,
 	"dependencies": {
-		"@package/multiplayer": "workspace:*",
 		"@package/multiplayer-client": "workspace:*",
 		"@package/multiplayer-platform-cloudflare": "workspace:*",
+		"@package/multiplayer-server": "workspace:*",
 		"zod": "^3.19.0"
 	},
 	"devDependencies": {

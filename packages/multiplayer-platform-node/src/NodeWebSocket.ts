@@ -1,4 +1,11 @@
-import { AbstractCloseEvent, AbstractErrorEvent, AbstractEventMap, AbstractListener, AbstractMessageEvent, AbstractWebSocket } from "@package/multiplayer";
+import {
+	AbstractCloseEvent,
+	AbstractErrorEvent,
+	AbstractEventMap,
+	AbstractListener,
+	AbstractMessageEvent,
+	AbstractWebSocket
+} from "@package/multiplayer-server";
 import WebSocket from "ws";
 
 export interface NodeWebSocketEventMap {

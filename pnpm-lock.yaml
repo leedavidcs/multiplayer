@@ -75,17 +75,17 @@ importers:
   packages/app-multiplayer:
     specifiers:
       '@package/eslint-config-custom': workspace:*
-      '@package/multiplayer': workspace:*
       '@package/multiplayer-client': workspace:*
       '@package/multiplayer-platform-cloudflare': workspace:*
+      '@package/multiplayer-server': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       typescript: ^4.8.3
       zod: ^3.19.0
     dependencies:
-      '@package/multiplayer': link:../multiplayer
       '@package/multiplayer-client': link:../multiplayer-client
       '@package/multiplayer-platform-cloudflare': link:../multiplayer-platform-cloudflare
+      '@package/multiplayer-server': link:../multiplayer-server
       zod: 3.19.0
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
@@ -125,23 +125,6 @@ importers:
     devDependencies:
       typescript: 4.8.3
 
-  packages/multiplayer:
-    specifiers:
-      '@package/common-utils': workspace:*
-      '@package/eslint-config-custom': workspace:*
-      '@package/multiplayer-internal': workspace:*
-      '@package/tsconfig': workspace:*
-      '@package/typings': workspace:*
-      typescript: ^4.8.3
-    dependencies:
-      '@package/common-utils': link:../common-utils
-      '@package/multiplayer-internal': link:../multiplayer-internal
-    devDependencies:
-      '@package/eslint-config-custom': link:../eslint-config-custom
-      '@package/tsconfig': link:../tsconfig
-      '@package/typings': link:../typings
-      typescript: 4.8.3
-
   packages/multiplayer-client:
     specifiers:
       '@package/common-utils': workspace:*
@@ -177,16 +160,16 @@ importers:
     specifiers:
       '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
-      '@package/multiplayer': workspace:*
       '@package/multiplayer-internal': workspace:*
+      '@package/multiplayer-server': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       '@package/wrangler-utils': workspace:*
       typescript: ^4.8.3
     dependencies:
       '@package/common-utils': link:../common-utils
-      '@package/multiplayer': link:../multiplayer
       '@package/multiplayer-internal': link:../multiplayer-internal
+      '@package/multiplayer-server': link:../multiplayer-server
       '@package/wrangler-utils': link:../wrangler-utils
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
@@ -198,8 +181,8 @@ importers:
     specifiers:
       '@package/common-utils': workspace:*
       '@package/eslint-config-custom': workspace:*
-      '@package/multiplayer': workspace:*
       '@package/multiplayer-internal': workspace:*
+      '@package/multiplayer-server': workspace:*
       '@package/tsconfig': workspace:*
       '@package/typings': workspace:*
       '@types/ws': ^8.5.3
@@ -207,8 +190,8 @@ importers:
       ws: ^8.8.1
     dependencies:
       '@package/common-utils': link:../common-utils
-      '@package/multiplayer': link:../multiplayer
       '@package/multiplayer-internal': link:../multiplayer-internal
+      '@package/multiplayer-server': link:../multiplayer-server
       '@types/ws': 8.5.3
       ws: 8.8.1
     devDependencies:
@@ -230,6 +213,23 @@ importers:
       '@package/multiplayer-client': link:../multiplayer-client
       '@types/react': 18.0.18
       react: 18.2.0
+    devDependencies:
+      '@package/eslint-config-custom': link:../eslint-config-custom
+      '@package/tsconfig': link:../tsconfig
+      '@package/typings': link:../typings
+      typescript: 4.8.3
+
+  packages/multiplayer-server:
+    specifiers:
+      '@package/common-utils': workspace:*
+      '@package/eslint-config-custom': workspace:*
+      '@package/multiplayer-internal': workspace:*
+      '@package/tsconfig': workspace:*
+      '@package/typings': workspace:*
+      typescript: ^4.8.3
+    dependencies:
+      '@package/common-utils': link:../common-utils
+      '@package/multiplayer-internal': link:../multiplayer-internal
     devDependencies:
       '@package/eslint-config-custom': link:../eslint-config-custom
       '@package/tsconfig': link:../tsconfig
