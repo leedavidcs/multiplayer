@@ -4,6 +4,8 @@ import WebSocket from "ws";
 import { NodeWebSocket } from "./NodeWebSocket";
 
 export class MultiplayerNodePlatform extends AbstractMultiplayerPlatform<WebSocket> {
+	public canAsync = true as const;
+
 	public convertWebSocket(webSocket: WebSocket): NodeWebSocket {
 		return new NodeWebSocket(webSocket);
 	}
