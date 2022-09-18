@@ -1,4 +1,4 @@
-import { ms, UrlUtils } from "@package/common-utils";
+import { ms } from "@package/common-utils";
 import { EventMessage, EventRecord, InferEventMessage } from "@package/multiplayer-internal";
 import { produce } from "immer";
 
@@ -118,7 +118,7 @@ export class WebSocketManager<
 			? this._config.apiEndpoint
 			: await Promise.resolve(this._config.apiEndpoint());
 
-		const webSocket = new WebSocket(UrlUtils.preferWss(apiEndpoint));
+		const webSocket = new WebSocket(apiEndpoint);
 
 		this._updateState((oldState) => {
 			oldState.connection.state = ConnectionState.Connecting;
