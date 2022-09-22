@@ -1,4 +1,4 @@
-import { ObjectUtils } from "@package/common-utils";
+import { ObjectUtils, PromiseUtils } from "@package/common-utils";
 import {
 	DefaultClientEventRecord,
 	DefaultServerMessage,
@@ -9,46 +9,59 @@ import {
 	MultiplayerInternal,
 	MultiplayerLike
 } from "@package/multiplayer-internal";
-import { AbstractMultiplayerPlatform, InferWebSocketType } from "./AbstractMultiplayerPlatform";
+import {
+	AbstractMultiplayerPlatform,
+	InferPlatformAsync,
+	InferWebSocketType
+} from "./AbstractMultiplayerPlatform";
 import { AbstractWebSocket } from "./AbstractWebSocket";
 
-interface WebSocketSession {
+interface WebSocketSession<TPlatform extends Maybe<AbstractMultiplayerPlatform<any, any>> = null> {
 	id: string;
 	quit: boolean;
-	webSocket: AbstractWebSocket;
+	webSocket: AbstractWebSocket<InferPlatformAsync<TPlatform>>;
 }
 
 interface EventResolverHelpers<
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any, any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
 > {
-	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) => Promise<void>;
+	_platform: TPlatform;
+	broadcast: (message: InferEventMessage<TOutput> | DefaultServerMessage) =>
+		InferPlatformAsync<TPlatform> extends true ? Promise<void> : void;
 	context: TContext;
-	session: WebSocketSession;
+	session: WebSocketSession<TPlatform>;
 }
 
 export type EventResolver<
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any, any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TData extends EventData = {}
-> = (data: TData, helpers: EventResolverHelpers<TContext, TOutput>) => void;
+> = (
+	data: TData,
+	helpers: EventResolverHelpers<TPlatform, TContext, TOutput>
+) => InferPlatformAsync<TPlatform> extends true ? Promise<void> : void;
 
 export interface EventConfig<
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any, any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TData extends EventData = {}
 > {
 	input?: InputZodLike<TData>;
-	resolver: EventResolver<TContext, TOutput, TData>;
+	resolver: EventResolver<TPlatform, TContext, TOutput, TData>;
 }
 
 type InferEventConfig<
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any, any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {},
 	TEvents extends EventRecord<string, any> = {}
 > = {
 	[P in keyof TEvents]: P extends string
-		? Id<EventConfig<TContext, TOutput, TEvents[P]>>
+		? Id<EventConfig<TPlatform, TContext, TOutput, TEvents[P]>>
 		: never;
 };
 
@@ -64,9 +77,9 @@ export interface MultiplayerRegisterOptions<
 	TOutput extends EventRecord<string, any> = {}
 > {
 	middleware?: (
-		helpers: EventResolverHelpers<TContext, TOutput>,
+		helpers: EventResolverHelpers<TPlatform, TContext, TOutput>,
 		next: () => void
-	) => TPlatform extends { canAsync: true } ? MaybePromise<void> : void;
+	) => TPlatform extends AbstractMultiplayerPlatform<any, true> ? MaybePromise<void> : void;
 }
 
 export interface MultiplayerOptions<
@@ -75,7 +88,7 @@ export interface MultiplayerOptions<
 	TOutput extends EventRecord<string, any> = {},
 	TInput extends EventRecord<string, any> = {},
 > {
-	events?: InferEventConfig<TContext, TOutput, TInput>;
+	events?: InferEventConfig<TPlatform, TContext, TOutput, TInput>;
 	platform?: TPlatform;
 }
 
@@ -97,24 +110,24 @@ export class MultiplayerServer<
 	} = {} as any;
 
 	private _config: MultiplayerConfigOptions<TContext> | null = null;
-	private _sessions = new Map<string, WebSocketSession>();
+	private _sessions = new Map<string, WebSocketSession<TPlatform>>();
 
-	public events: InferEventConfig<TContext, TOutput, TInput>;
+	public events: InferEventConfig<TPlatform, TContext, TOutput, TInput>;
 	public platform: TPlatform;
 
 	constructor(options: MultiplayerOptions<TPlatform, TContext, TOutput, TInput>) {
 		const { events, platform = null } = options;
 
 		this.events = events
-			?? {} as InferEventConfig<TContext, TOutput, TInput>;
+			?? {} as InferEventConfig<TPlatform, TContext, TOutput, TInput>;
 
 		this.platform = platform as TPlatform;
 	}
 
-	public async broadcast(
+	public broadcast(
 		message: InferEventMessage<TOutput> | DefaultServerMessage
-	): Promise<void> {
-		const quitters: WebSocketSession[] = [];
+	): InferPlatformAsync<TPlatform> extends true ? Promise<void> : void {
+		const quitters: WebSocketSession<TPlatform>[] = [];
 
 		this._sessions.forEach((session) => {
 			quitters.push(session);
@@ -124,18 +137,37 @@ export class MultiplayerServer<
 			this._sessions.delete(session.id);
 		});
 
-		await Promise.all(Array.from(this._sessions.values()).map(((session) => {
-			return session.webSocket.sendMessage(message);
-		})));
+		const doAsync = async () => {
+			await Promise.all(Array.from(this._sessions.values()).map(((session) => {
+				return session.webSocket.sendMessage(message);
+			})));
+	
+			await Promise.all(quitters.map((quitter) => {
+				return this.broadcast({
+					type: "$EXIT",
+					data: {
+						sessionId: quitter.id,
+					}
+				})
+			}));
+		};
 
-		await Promise.all(quitters.map((quitter) => {
-			return this.broadcast({
-				type: "$EXIT",
-				data: {
-					sessionId: quitter.id,
-				}
-			})
-		}));
+		const doSync = () => {
+			Array.from(this._sessions.values()).forEach((session) => {
+				session.webSocket.sendMessage(message);
+			});
+
+			quitters.forEach((quitter) => {
+				this.broadcast({
+					type: "$EXIT",
+					data: {
+						sessionId: quitter.id,
+					}
+				});
+			});
+		};
+
+		return this.platform?.canAsync ? doAsync() : doSync() as any;
 	}
 
 	public event<
@@ -143,7 +175,7 @@ export class MultiplayerServer<
 		TData extends EventData = {}
 	>(
 		event: TEvent,
-		config: EventConfig<TContext, TOutput, TData>
+		config: EventConfig<TPlatform, TContext, TOutput, TData>
 	): MultiplayerServer<
 		TPlatform,
 		TContext,
@@ -159,7 +191,7 @@ export class MultiplayerServer<
 
 		const newEvent = {
 			[event]: config
-		} as InferEventConfig<TContext, TOutput, EventRecord<TEvent, TData>>;
+		} as InferEventConfig<TPlatform, TContext, TOutput, EventRecord<TEvent, TData>>;
 
 		return MultiplayerServer.merge(
 			this,
@@ -211,7 +243,7 @@ export class MultiplayerServer<
 
 		multiplayerWs.accept();
 
-		const session: WebSocketSession = {
+		const session: WebSocketSession<TPlatform> = {
 			id: this.platform.randomUUID(),
 			quit: false,
 			webSocket: multiplayerWs
@@ -219,14 +251,15 @@ export class MultiplayerServer<
 
 		this._sessions.set(session.id, session);
 
-		const helpers: EventResolverHelpers<TContext, TOutput> = {
-			broadcast: this.broadcast,
+		const helpers: EventResolverHelpers<TPlatform, TContext, TOutput> = {
+			_platform: this.platform,
+			broadcast: this.broadcast.bind(this),
 			/* eslint-disable-next-line */
 			context: this._config!.context,
 			session
 		};
 
-		multiplayerWs.addEventListener("message", async (message) => {
+		multiplayerWs.addEventListener("message", (message): void => {
 			// Should not reach here. But handling it just in-case.
 			if (session.quit) {
 				multiplayerWs.close(1011, "WebSocket broken");
@@ -240,57 +273,55 @@ export class MultiplayerServer<
 				goNext = true;
 			};
 
-			try {
-				options?.middleware
-					? await Promise.resolve(options.middleware(helpers, next))
-					: next();
-			} catch (error) {
-				multiplayerWs.handleError(error);
-	
-				return;
-			}
+			const middleware = options?.middleware ?? next;
 
-			if (!goNext) return;
+			PromiseUtils.callbackify(middleware)([helpers, next], ([, middlewareErr]) => {
+				if (middlewareErr) {
+					multiplayerWs.handleError(middlewareErr);
 
-			const rawMessage = MultiplayerInternal.parseMessage(message);
+					return;
+				}
 
-			if (!rawMessage) return;
+				if (!goNext) return;
 
-			const eventConfig = this.events[rawMessage.type] ?? null;
+				const rawMessage = MultiplayerInternal.parseMessage(message);
 
-			if (!eventConfig) return;
-	
-			let input: TInput[string]
-	
-			try {
-				input = eventConfig.input?.parse(rawMessage.data) ??
-					/**
-					 * !HACK
-					 * @description Config doesn't specify validation. Just return {}
-					 * instead in the resolver.
-					 * @author David Lee
-					 * @date August 13, 2022
-					 */
-					{} as TInput[string];
-			} catch(error) {
-				multiplayerWs.handleError(error, "Invalid input");
-	
-				return;
-			}
-	
-			try {
-				await Promise.resolve(eventConfig.resolver(input, helpers));
-			} catch (error) {
-				multiplayerWs.handleError(error);
-			}
+				if (!rawMessage) return;
+
+				const eventConfig = this.events[rawMessage.type] ?? null;
+
+				if (!eventConfig) return;
+		
+				let input: TInput[string];
+					
+				try {
+					input = eventConfig.input?.parse(rawMessage.data) ??
+						/**
+						 * !HACK
+						 * @description Config doesn't specify validation. Just return {}
+						 * instead in the resolver.
+						 * @author David Lee
+						 * @date August 13, 2022
+						 */
+						{} as TInput[string];
+				} catch(error) {
+					multiplayerWs.handleError(error, "Invalid input");
+		
+					return;
+				}
+
+				PromiseUtils.callbackify(eventConfig.resolver)([input, helpers], ([, resolverErr]) => {
+					multiplayerWs.handleError(resolverErr);
+				});
+			});
 		});
 
-		const closeHandler = async (): Promise<void> => {
+		const closeHandler = () => {
 			session.quit = true;
 
 			this._sessions.delete(session.id);
 
-			await this.broadcast({
+			return this.broadcast({
 				type: "$EXIT",
 				data: {
 					sessionId: session.id,
@@ -313,7 +344,10 @@ export class MultiplayerServer<
 	public usePlatform<
 		TNewPlatform extends AbstractMultiplayerPlatform<any>
 	>(platform: TNewPlatform): MultiplayerServer<TNewPlatform, TContext, TOutput, TInput> {
-		return new MultiplayerServer({ events: this.events, platform });
+		return new MultiplayerServer<TNewPlatform, TContext, TOutput, TInput>({
+			events: this.events as any,
+			platform: platform as any
+		});
 	}
 }
 
@@ -324,8 +358,8 @@ export const createServer = <
 	return new MultiplayerServer<null, TContext, TOutput, DefaultClientEventRecord>({
 		events: {
 			$PING: {
-				resolver: async (data, { session }) => {
-					await session.webSocket.sendMessage({ type: "$PONG", data: {} });
+				resolver: (data, { session }) => {
+					return session.webSocket.sendMessage({ type: "$PONG", data: {} });
 				}
 			}
 		}
