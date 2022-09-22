@@ -59,13 +59,14 @@ export interface MultiplayerConfigOptions<
 };
 
 export interface MultiplayerRegisterOptions<
+	TPlatform extends Maybe<AbstractMultiplayerPlatform<any>> = null,
 	TContext extends Record<string, any> = {},
 	TOutput extends EventRecord<string, any> = {}
 > {
 	middleware?: (
 		helpers: EventResolverHelpers<TContext, TOutput>,
 		next: () => void
-	) => MaybePromise<void>;
+	) => TPlatform extends { canAsync: true } ? MaybePromise<void> : void;
 }
 
 export interface MultiplayerOptions<
@@ -192,7 +193,7 @@ export class MultiplayerServer<
 
 	public register(
 		webSocket: InferWebSocketType<TPlatform>,
-		options?: MultiplayerRegisterOptions<TContext, TOutput>
+		options?: MultiplayerRegisterOptions<TPlatform, TContext, TOutput>
 	): void {
 		if (!this._config) {
 			throw new Error(
