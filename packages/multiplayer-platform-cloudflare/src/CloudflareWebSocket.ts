@@ -11,7 +11,8 @@ export interface CloudflareWebSocketEventMap {
 	error: ErrorEvent;
 }
 
-export class CloudflareWebSocket extends AbstractWebSocket {
+export class CloudflareWebSocket extends AbstractWebSocket<false> {
+	public canAsync = false as const;
 	public webSocket: WebSocket;
 
 	constructor(webSocket: WebSocket) {
@@ -26,7 +27,7 @@ export class CloudflareWebSocket extends AbstractWebSocket {
 
 	public addEventListener<TType extends keyof AbstractEventMap>(
 		type: TType,
-		handler: AbstractListener<TType>
+		handler: AbstractListener<TType, false>
 	) {
 		this.webSocket.addEventListener(type, handler as any);
 	}
@@ -35,7 +36,7 @@ export class CloudflareWebSocket extends AbstractWebSocket {
 		this.webSocket.close(code, reason);
 	}
 
-	public async send(message: string | ArrayBuffer | ArrayBufferView): Promise<void> {
-		await Promise.resolve(this.webSocket.send(message));
+	public send(message: string | ArrayBuffer | ArrayBufferView): void {
+		this.webSocket.send(message);
 	}
 }

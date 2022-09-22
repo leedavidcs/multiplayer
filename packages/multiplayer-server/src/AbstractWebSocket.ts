@@ -21,10 +21,12 @@ export interface AbstractEventMap {
 
 export type EventType = keyof AbstractEventMap;
 
-export type AbstractListener<TType extends keyof AbstractEventMap> =
-	(event: AbstractEventMap[TType]) => MaybePromise<void>;
+export type AbstractListener<TType extends keyof AbstractEventMap, TAsync extends boolean> =
+	(event: AbstractEventMap[TType]) => TAsync extends true ? MaybePromise<void> : void;
 
-export abstract class AbstractWebSocket {
+export abstract class AbstractWebSocket<TAsync extends boolean> {
+	public abstract canAsync: TAsync;
+
 	public abstract accept(): void;
 
 	/**
@@ -39,7 +41,7 @@ export abstract class AbstractWebSocket {
 	 */
 	public abstract addEventListener<TType extends EventType>(
 		type: TType,
-		handler: AbstractListener<TType>
+		handler: AbstractListener<TType, TAsync>
 	): void;
 
 	public abstract close(
@@ -49,36 +51,34 @@ export abstract class AbstractWebSocket {
 
 	public abstract send(
 		message: string | ArrayBuffer | ArrayBufferView
-	): Promise<void>;
+	): TAsync extends true ? MaybePromise<void> : void;
 
-	public async handleError(
+	public handleError(
 		error: unknown,
 		message?: string
-	): Promise<void> {
-		if (error instanceof Error) {
-			await this.sendMessage({
+	): TAsync extends true ? Promise<void> : void {
+		return error instanceof Error
+			? this.sendMessage({
 				type: "$ERROR",
 				data: {
 					message: message ?? error.message,
 					stack: error.stack ?? null
 				}
+			})
+			: this.sendMessage({
+				type: "$ERROR",
+				data: {
+					message: "Unexpected error",
+					stack: null
+				}
 			});
-
-			return;
-		}
-
-		await this.sendMessage({
-			type: "$ERROR",
-			data: {
-				message: "Unexpected error",
-				stack: null
-			}
-		});
 	}
 
-	public async sendMessage<
+	public sendMessage<
 		TMessage extends EventMessage<string, any> = EventMessage<string, any>
-	>(data: TMessage): Promise<void> {
-		await Promise.resolve(this.send(JSON.stringify(data)));
+	>(data: TMessage): TAsync extends true ? Promise<void> : void {
+		return this.canAsync
+			? Promise.resolve(this.send(JSON.stringify(data)))
+			: this.send(JSON.stringify(data)) as any;
 	}
 }
