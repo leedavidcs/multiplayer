@@ -1,3 +1,4 @@
+export type { TypedEvent } from "@package/common-utils";
 export type {
 	EventData,
 	EventMessage,

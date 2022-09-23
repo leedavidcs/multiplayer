@@ -3,7 +3,8 @@ import {
 	InferInput,
 	InferOutput,
 	MultiplayerClient,
-	MultiplayerClientConfigOptions
+	MultiplayerClientConfigOptions,
+	TypedEvent
 } from "@package/multiplayer-client";
 import { FC, ReactNode, useCallback, useContext, useEffect } from "react";
 import { MultiplayerContext } from "./context";
@@ -102,17 +103,24 @@ export const createMultiplayer = <TMultiplayer extends MultiplayerClient<any, an
 
 	const useEvent = <TType extends keyof InferInput<TMultiplayer>>(
 		type: TType,
-		callback: (data: InferInput<TMultiplayer>[TType]) => void
+		callback: (
+			data: InferInput<TMultiplayer>[TType],
+			event: TypedEvent<InferInput<TMultiplayer>[TType]>
+		) => void
 	): void => {
 		const { client, loading } = useMultiplayerClient();
 
 		useEffect(() => {
 			if (loading) return;
 
-			client.addEventListener(type, callback);
+			const listener = (event: TypedEvent<InferInput<TMultiplayer>[TType]>) => {
+				callback(event.data, event);
+			};
+
+			client.addEventListener(type, listener);
 
 			return () => {
-				client.removeEventListener(type, callback);
+				client.removeEventListener(type, listener);
 			};
 		}, [client, loading]);
 	};

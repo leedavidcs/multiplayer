@@ -83,7 +83,7 @@ export class MultiplayerClient<
 
 				this._logDebug("WebSocket event received: ", rawMessage.type, rawMessage);
 
-				this.dispatchEvent(new TypedEvent(rawMessage.type, rawMessage));
+				this.dispatchEvent(new TypedEvent(rawMessage.type, rawMessage.data));
 			},
 			onUpdate: (state) => {
 				options.onConnectionUpdate?.(state);
@@ -199,7 +199,7 @@ export class MultiplayerClient<
 	}
 
 	private _logDebug(...data: any[]): void {
-		this._config.debug && console.log(data);
+		this._config.debug && console.log(...data);
 	}
 
 	private _parseMessage(

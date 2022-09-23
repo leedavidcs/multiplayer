@@ -8,7 +8,11 @@ export const Page: NextPage = () => {
 
     const broadcast = useBroadcast();
 
-    useEvent("RECEIVE_MESSAGE", ({ message }) => {
+    useEvent("RECEIVE_MESSAGE", (data) => {
+        console.log("data", data);
+
+        const { message } = data;
+
         setMessages((oldMessages) => [...oldMessages, message]);
     });
 
