@@ -130,7 +130,7 @@ export class MultiplayerServer<
 		const quitters: WebSocketSession<TPlatform>[] = [];
 
 		this._sessions.forEach((session) => {
-			quitters.push(session);
+			session.quit && quitters.push(session);
 		});
 
 		quitters.forEach((session) => {
@@ -311,7 +311,9 @@ export class MultiplayerServer<
 				}
 
 				PromiseUtils.callbackify(eventConfig.resolver)([input, helpers], ([, resolverErr]) => {
-					multiplayerWs.handleError(resolverErr);
+					if (resolverErr) {
+						multiplayerWs.handleError(resolverErr);
+					}
 				});
 			});
 		});
