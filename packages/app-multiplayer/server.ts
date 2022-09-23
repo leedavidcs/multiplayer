@@ -15,7 +15,7 @@ export const multiplayerServer = createServer<{}, MultiplayerClientInput>()
 			broadcast({
 				type: "RECEIVE_MESSAGE",
 				data: { message }
-			})
+			});
 		}
 	});
 
